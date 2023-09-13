@@ -35,7 +35,7 @@ run_pthreads:
 	./nnetwork
 
 run_perf:
-	perf stat -e LLC-misses ./nnetwork
+	sudo perf stat -e LLC-misses ./nnetwork
 
 run_parallel:
 	mpirun -np 4 ./nnetwork_mpi

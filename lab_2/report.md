@@ -20,13 +20,14 @@ we measure the start time and end time between Feed forward and Back propagation
 and the result like this:
 ```bash 
 Iteration #: 999
-Iteration Time: 0.0762976s
-Forward and Backward Time(s) per epoch:0.075361 98.7724% time spend at dot in an epoch
+Iteration Time: 0.0720264s
+Forward and Backward Time(s) per epoch:0.071397 99.1262% time spend at dot in an epoch
 Loss: 0.886171
 ```
-And we can see that about 98%-99% time was spent at GEMM kernal.
+And we can see that about 98%-99% time was spent at GEMM kernal.  
 
 ## Task 2
+the loop interchange code:
 ``` cpp
     // loop interchange 
     for( int row = 0; row < m1_rows; ++row ) {
@@ -37,18 +38,17 @@ And we can see that about 98%-99% time was spent at GEMM kernal.
         }
     }
 ```
+and the result like this:
 ```bash
 Iteration #: 999
-Iteration Time: 0.0262516s
-Forward and Backward Time(s) per epoch:0.025327 96.478% time spend at dot in an epoch
+Iteration Time: 0.0122538s
+Forward and Backward Time(s) per epoch:0.011546 94.2238% time spend at dot in an epoch
 Loss: 0.886171
 ```
-perf result:
-```
-
-```
+it is obviously, time spent at dot reduce many, about 1 out of 5 to 6 of orignial version.
 
 ## Task 3
+we do tile for i,j,k speratively, then we get the nested loops like this:
 ```cpp
 #define BLOCK_TILE 
 //...
@@ -61,19 +61,63 @@ for(int it=0;it<N; it+=block_size)
                         output[i*M+j] +=m1[i*K+k]* m2[k*M+j];
 //..
 ```
+and we get time consumption:
 ```bash
 Iteration #: 999
 Iteration Time: 0.033847s
 Forward and Backward Time(s) per epoch:0.032891 97.1755% time spend at dot in an epoch
 Loss: 0.886171
 ```
+# TODO: what would be an efficient BLOCK_SIZE?
+
 
 ## Task 4
-threads=10
+### Step a and b
+we acheive mutlithread by this code:
+``` cpp
+    const int num_partitions = 4; // the number of processor ?
+    pthread_t threads[num_partitions];
+    const int step = m1_rows / num_partitions + (m1_rows % num_partitions != 0);
+    for (int i = 0; i < num_partitions; ++i) {
+      gemm_thread_args* args = new gemm_thread_args;
+      args->output = &output;
+      // assign rest of the arguments of gemm_thread_args accordingly
+      args->m1= &m1;
+      args->m2= &m2;
+      args->m1_rows = m1_rows;
+      args->m1_columns = m1_columns;
+      args->m2_columns = m2_columns;
+      args->row_start = step*i;
+      args->row_end = min(args->row_start+ step, m1_rows);
+      pthread_create(&threads[i],nullptr,[](void* args)->void*{
+        gemm_thread_args* margs = (gemm_thread_args*)args;
+        for( int row = margs->row_start; row < margs->row_end; ++row ) {
+            for( int k = 0; k < margs->m1_columns; ++k ){
+                for( int col = 0; col < margs->m2_columns; ++col ) {
+                    (*(margs->output))[ row * margs->m2_columns + col ] += 
+                        (*(margs->m1))[ row * margs->m1_columns + k] *
+                        (*(margs->m2))[ k * margs->m2_columns + col ];
+                }
+            }
+        }
+        return NULL;
+      }, args); 
+    }
+    for (int i = 0; i < num_partitions; ++i) {
+      pthread_join(threads[i], nullptr);
+    }
+```
+then run to collect time consumption:
 ```bash
 Iteration #: 999
 Iteration Time: 0.0165817s
 Forward and Backward Time(s) per epoch:0.015506 93.513% time spend at dot in an epoch
 Loss: 0.886171
-
 ```
+we have tested for different thread number, from 2 to 12.
+<!-- todo plot it -->
+### Step c
+todo
+
+## Task 5
+### Step a, the maximum speedup 

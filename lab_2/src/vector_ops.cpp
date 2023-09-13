@@ -5,8 +5,9 @@
 #include <iostream>
 #include "vector_ops.h" 
 
-// #define BLOCK_TILE 
-#define USE_PTHREAD 
+// #define INTERCHANGE
+#define BLOCK_TILE 
+// #define USE_PTHREAD 
 
 #ifdef USE_PTHREAD
 struct gemm_thread_args
@@ -248,28 +249,31 @@ vector <float> dot (const vector <float>& m1, const vector <float>& m2, const in
                 }
             }
         }
+        return NULL;
       }, args); 
     }
     for (int i = 0; i < num_partitions; ++i) {
       pthread_join(threads[i], nullptr);
     }
 #else
-    // for( int row = 0; row < m1_rows; ++row ) {
-    //     for( int col = 0; col < m2_columns; ++col ) {
-    //         for( int k = 0; k < m1_columns; ++k ) {
-    //             output[ row * m2_columns + col ] += m1[ row * m1_columns + k ] * m2[ k * m2_columns + col ];
-    //         }
-    //     }
-    // }
-
-    // loop interchange 
-    for( int row = 0; row < m1_rows; ++row ) {
-        for( int k = 0; k < m1_columns; ++k ){
-            for( int col = 0; col < m2_columns; ++col ) {
-                output[ row * m2_columns + col ] += m1[ row * m1_columns + k ] * m2[ k * m2_columns + col ];
+    #ifdef INTERCHANGE
+        // loop interchange 
+        for( int row = 0; row < m1_rows; ++row ) {
+            for( int k = 0; k < m1_columns; ++k ){
+                for( int col = 0; col < m2_columns; ++col ) {
+                    output[ row * m2_columns + col ] += m1[ row * m1_columns + k ] * m2[ k * m2_columns + col ];
+                }
             }
         }
-    }
+    #else
+        for( int row = 0; row < m1_rows; ++row ) {
+            for( int col = 0; col < m2_columns; ++col ) {
+                for( int k = 0; k < m1_columns; ++k ) {
+                    output[ row * m2_columns + col ] += m1[ row * m1_columns + k ] * m2[ k * m2_columns + col ];
+                }
+            }
+        }
+    #endif
 
 #endif
   return output;
