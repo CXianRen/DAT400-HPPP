@@ -4,10 +4,10 @@
 ## Problem 1
 + Subsection a:
 >Processor number $P=8$  
-Total sequential execution time  $ T^* = 1000$
+Total sequential execution time $T^* = 1000$  
 Execution time $T_{exe}$:
 $$T_{exe} = T_p = T_{comp.} + T_{synchro.} + T_{exchange} + T_{wait}$$
-One core local computations time $T_{comp.}$:
+One core local computations time $T_{comp.}$:  
 $$T_{comp.} = \frac{T^*}{P}$$
 Then:
 $$T_{exe} = \frac{1000}{8} + 2 + 10  = 125 + 2 + 10 = 137 s$$
@@ -140,7 +140,6 @@ $$
   & N_p(1000)= 95000
 \end{align*}
 $$
-
 When overheads of thread creation are taken into account:  
 $$T_p = 50 +\frac{N}{P}*10 +  T_{ThreadCreate}= 1000$$
 Here when $T_{ThreadCreate}= 10sec + 0.1sec + 0.1sec * P$:
@@ -156,18 +155,19 @@ $$
 \end{align*}
 $$
 
-## Problem 4
-### a
-P=8, B=16G/s  
-$At_{max} = 0.5GFLOPS * P = 4GFLOPS$  
-$AI_{max}= At_{max} / B = 4/16 = 0.25 FLOPS/Byte $  
+## Problem 
++ Subsection a
+> what we know are : $P=8$, $B=16G/s$, $C=16G$, $AI=0.4 Flop/Byte$ 
+And the peak computaion capability $Peak$:
+$$Peak = 0.5GFLOPS * P = 4GFLOPS$$  
+For te algorithm:
+$AI*B = 0.4Flop/Byte * 16GB/s = 0.4 * 16 * 1024 =  6.4GFlops$  
+$At = min(Peak,AI * B) = min(4GFLOPS, 6.4GFLOPs)$  
+So the theoratical time $T_{theoretical}$ should be:
+$$16G/4GFLOPs = 4s < 8s$$
+<!-- so should we improve the algorithm ? -->
+<!-- dose it mean a memory bound? -->
 
-Computer Float for phase b is: $16G/8s = 2GFlops < At_{max}$
-
-<!-- $AI_{b} = 0.4 Flops/Byte$
-$IO= 2GFlops/AI_b = 5$ -->
-So they should further optimize the algortihm.
-<!-- computer bound -->
 ### b
 Computer Flop for phase b is: $16G/4s = 4GFlops = At_{max}$  
 So Compute FLOPS is the nex the bottleneck.
