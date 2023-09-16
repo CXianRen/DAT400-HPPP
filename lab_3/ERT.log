@@ -1,0 +1,80 @@
+
+Reading configuration from './Config/config.lab3'...
+  Using existing results directory, Results.Local.Server...
+    Using existing run directory, Results.Local.Server/Run.001...
+
+FLOP count 1...
+
+  Building ERT core code...
+    g++ -O3 -I./Kernels -DERT_FLOP=1 -DERT_ALIGN=64 -DERT_MEMORY_MAX=1073741824 -DERT_WORKING_SET_MIN=1 -DERT_TRIALS_MIN=1 -DERT_WSS_MULT=1.1 -DERT_OPENMP -fopenmp -DERT_FP64 -c ./Drivers/driver1.cxx -o Results.Local.Server/Run.001/FLOPS.001/driver1.o 
+    g++ -O3 -I./Kernels -DERT_FLOP=1 -DERT_ALIGN=64 -DERT_MEMORY_MAX=1073741824 -DERT_WORKING_SET_MIN=1 -DERT_TRIALS_MIN=1 -DERT_WSS_MULT=1.1 -DERT_OPENMP -fopenmp -DERT_FP64 -c ./Kernels/kernel1.cxx -o Results.Local.Server/Run.001/FLOPS.001/kernel1.o 
+    g++ -fopenmp Results.Local.Server/Run.001/FLOPS.001/driver1.o Results.Local.Server/Run.001/FLOPS.001/kernel1.o -o Results.Local.Server/Run.001/FLOPS.001/driver1.kernel1 
+
+  Running ERT core code...
+    Skipping OpenMP 4 - already run
+
+  Processing results...
+    Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004
+    cat Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004/try.* | ./Scripts/preprocess.py > Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004/pre
+    ./Scripts/maximum.py < Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004/pre > Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004/max
+    ./Scripts/summary.py < Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004/max > Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004/sum
+
+    echo 'load "Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004/graph1.gnu"' | gnuplot
+    echo 'load "Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004/graph2.gnu"' | gnuplot
+    echo 'load "Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004/graph3.gnu"' | gnuplot
+    echo 'load "Results.Local.Server/Run.001/FLOPS.001/OpenMP.0004/graph4.gnu"' | gnuplot
+
+
+FLOP count 4...
+
+  Building ERT core code...
+    g++ -O3 -I./Kernels -DERT_FLOP=4 -DERT_ALIGN=64 -DERT_MEMORY_MAX=1073741824 -DERT_WORKING_SET_MIN=1 -DERT_TRIALS_MIN=1 -DERT_WSS_MULT=1.1 -DERT_OPENMP -fopenmp -DERT_FP64 -c ./Drivers/driver1.cxx -o Results.Local.Server/Run.001/FLOPS.004/driver1.o 
+    g++ -O3 -I./Kernels -DERT_FLOP=4 -DERT_ALIGN=64 -DERT_MEMORY_MAX=1073741824 -DERT_WORKING_SET_MIN=1 -DERT_TRIALS_MIN=1 -DERT_WSS_MULT=1.1 -DERT_OPENMP -fopenmp -DERT_FP64 -c ./Kernels/kernel1.cxx -o Results.Local.Server/Run.001/FLOPS.004/kernel1.o 
+    g++ -fopenmp Results.Local.Server/Run.001/FLOPS.004/driver1.o Results.Local.Server/Run.001/FLOPS.004/kernel1.o -o Results.Local.Server/Run.001/FLOPS.004/driver1.kernel1 
+
+  Running ERT core code...
+    Skipping OpenMP 4 - already run
+
+  Processing results...
+    Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004
+    cat Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004/try.* | ./Scripts/preprocess.py > Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004/pre
+    ./Scripts/maximum.py < Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004/pre > Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004/max
+    ./Scripts/summary.py < Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004/max > Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004/sum
+
+    echo 'load "Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004/graph1.gnu"' | gnuplot
+    echo 'load "Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004/graph2.gnu"' | gnuplot
+    echo 'load "Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004/graph3.gnu"' | gnuplot
+    echo 'load "Results.Local.Server/Run.001/FLOPS.004/OpenMP.0004/graph4.gnu"' | gnuplot
+
+
+FLOP count 16...
+
+  Building ERT core code...
+    g++ -O3 -I./Kernels -DERT_FLOP=16 -DERT_ALIGN=64 -DERT_MEMORY_MAX=1073741824 -DERT_WORKING_SET_MIN=1 -DERT_TRIALS_MIN=1 -DERT_WSS_MULT=1.1 -DERT_OPENMP -fopenmp -DERT_FP64 -c ./Drivers/driver1.cxx -o Results.Local.Server/Run.001/FLOPS.016/driver1.o 
+    g++ -O3 -I./Kernels -DERT_FLOP=16 -DERT_ALIGN=64 -DERT_MEMORY_MAX=1073741824 -DERT_WORKING_SET_MIN=1 -DERT_TRIALS_MIN=1 -DERT_WSS_MULT=1.1 -DERT_OPENMP -fopenmp -DERT_FP64 -c ./Kernels/kernel1.cxx -o Results.Local.Server/Run.001/FLOPS.016/kernel1.o 
+    g++ -fopenmp Results.Local.Server/Run.001/FLOPS.016/driver1.o Results.Local.Server/Run.001/FLOPS.016/kernel1.o -o Results.Local.Server/Run.001/FLOPS.016/driver1.kernel1 
+
+  Running ERT core code...
+    Skipping OpenMP 4 - already run
+
+  Processing results...
+    Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004
+    cat Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004/try.* | ./Scripts/preprocess.py > Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004/pre
+    ./Scripts/maximum.py < Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004/pre > Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004/max
+    ./Scripts/summary.py < Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004/max > Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004/sum
+
+    echo 'load "Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004/graph1.gnu"' | gnuplot
+    echo 'load "Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004/graph2.gnu"' | gnuplot
+    echo 'load "Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004/graph3.gnu"' | gnuplot
+    echo 'load "Results.Local.Server/Run.001/FLOPS.016/OpenMP.0004/graph4.gnu"' | gnuplot
+
+
+Gathering the final roofline results...
+    cat Results.Local.Server/Run.001/*/*/sum | ./Scripts/roofline.py
+    echo 'load "Results.Local.Server/Run.001/roofline.gnu"' | gnuplot
+
++-------------------------------------------------
+| Empirical roofline graph:    'Results.Local.Server/Run.001/roofline.ps'
+| Empirical roofline database: 'Results.Local.Server/Run.001/roofline.json'
++-------------------------------------------------
+
