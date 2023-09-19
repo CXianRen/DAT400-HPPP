@@ -4,6 +4,7 @@
 #include <string.h>
 #include <omp.h>
 
+#define THREAD_NUM 6
 #define ERR 1e-3
 #define DIFF(x,y) ((x-y)<0? y-x : x-y)
 #define FPNEQ(x,y) (DIFF(x,y)>ERR ? 1 : 0)
@@ -86,14 +87,14 @@ int main(int argc, char** argv) {
 
   printf("Running parallel (outer loop).......................\n");
   ts = omp_get_wtime();
-  #pragma omp parallel private(i)
+  #pragma omp parallel num_threads(THREAD_NUM)
   {
     int thread_count = omp_get_num_threads();
     int partition_size = N / thread_count;
     int thread_id = omp_get_thread_num();
     int start = thread_id * partition_size;
     int end = (thread_id + 1 ==thread_count)? N: start+partition_size;
-    for (i=start; i<end; i++) {            //FIXME: Parallelize
+    for (int i=start; i<end; i++) {            //FIXME: Parallelize
       float pi = 0;
       float axi = 0;
       float ayi = 0;
@@ -114,7 +115,7 @@ int main(int argc, char** argv) {
       ay[i] = ayi;
     }
   }
-  
+
   tf = omp_get_wtime();
   if(test(N, sol, p, ax, ay)) 
     printf("Time: %.4lfs -- PASS\n", tf - ts);
@@ -125,23 +126,42 @@ int main(int argc, char** argv) {
 
   printf("Running parallel (inner loop).......................\n");
   ts = omp_get_wtime();
-  // #pragma omp parallel
   for (i=0; i<N; i++) {
     float pi = 0;
     float axi = 0;
     float ayi = 0;
     float xi = x[i];
     float yi = y[i];
-    // #pragma omp for schedule(static)
-    for (j=0; j<N; j++) {       //FIXME: Parallelize
-      float dx = x[j] - xi;
-      float dy = y[j] - yi;
-      float R2 = dx * dx + dy * dy + EPS2;
-      float invR = 1.0f / sqrtf(R2);
-      float invR3 = m[j] * invR * invR * invR;
-      pi += m[j] * invR;
-      axi += dx * invR3;
-      ayi += dy * invR3;
+
+    float pii[THREAD_NUM];
+    float axii[THREAD_NUM];
+    float ayii[THREAD_NUM];
+
+    #pragma omp parallel num_threads(THREAD_NUM)
+    {
+      int thread_count = omp_get_num_threads();
+      int partition_size = N / thread_count;
+      int thread_id = omp_get_thread_num();
+      int start = thread_id * partition_size;
+      int end = (thread_id + 1 ==thread_count)? N: start+partition_size;
+      pii[thread_id] = 0;
+      axii[thread_id] = 0;
+      ayii[thread_id] = 0;
+      for (int j=start; j<end; j++) {       //FIXME: Parallelize
+        float dx = x[j] - xi;
+        float dy = y[j] - yi;
+        float R2 = dx * dx + dy * dy + EPS2;
+        float invR = 1.0f / sqrtf(R2);
+        float invR3 = m[j] * invR * invR * invR;
+        pii[thread_id]  += m[j] * invR;
+        axii[thread_id] += dx * invR3;
+        ayii[thread_id] += dy * invR3;
+      }
+    }
+    for (int m=0;m<THREAD_NUM;m++){
+      pi+=pii[m];
+      axi+=axii[m];
+      ayi+=ayii[m];
     }
     p[i] = pi;
     ax[i] = axi;
@@ -159,21 +179,43 @@ int main(int argc, char** argv) {
   printf("Running parallel (inner loop without false sharing).\n");
   ts = omp_get_wtime();
  
- for (i=0; i<N; i++) {
+  for (i=0; i<N; i++) {
     float pi = 0;
     float axi = 0;
     float ayi = 0;
     float xi = x[i];
     float yi = y[i];
-    for (j=0; j<N; j++) {       //FIXME: Parallelize without false sharing
-      float dx = x[j] - xi;
-      float dy = y[j] - yi;
-      float R2 = dx * dx + dy * dy + EPS2;
-      float invR = 1.0f / sqrtf(R2);
-      float invR3 = m[j] * invR * invR * invR;
-      pi += m[j] * invR;
-      axi += dx * invR3;
-      ayi += dy * invR3;
+
+    // to avoid false sharing, we should padding pii, axii, ayii to 64 Byte()
+    float pii[THREAD_NUM  *(64/(sizeof(float)))];
+    float axii[THREAD_NUM *(64/(sizeof(float)))];
+    float ayii[THREAD_NUM *(64/(sizeof(float)))];
+
+    #pragma omp parallel num_threads(THREAD_NUM)
+    {
+      int thread_count = omp_get_num_threads();
+      int partition_size = N / thread_count;
+      int thread_id = omp_get_thread_num();
+      int start = thread_id * partition_size;
+      int end = (thread_id + 1 ==thread_count)? N: start+partition_size;
+      pii[thread_id*(64/(sizeof(float)))] = 0;
+      axii[thread_id*(64/(sizeof(float)))] = 0;
+      ayii[thread_id*(64/(sizeof(float)))] = 0;
+      for (int j=start; j<end; j++) {       //FIXME: Parallelize
+        float dx = x[j] - xi;
+        float dy = y[j] - yi;
+        float R2 = dx * dx + dy * dy + EPS2;
+        float invR = 1.0f / sqrtf(R2);
+        float invR3 = m[j] * invR * invR * invR;
+        pii[thread_id*(64/(sizeof(float)))]  += m[j] * invR;
+        axii[thread_id*(64/(sizeof(float)))] += dx * invR3;
+        ayii[thread_id*(64/(sizeof(float)))] += dy * invR3;
+      }
+    }
+    for (int m=0;m<THREAD_NUM;m++){
+      pi+=pii[m*(64/(sizeof(float)))];
+      axi+=axii[m*(64/(sizeof(float)))];
+      ayi+=ayii[m*(64/(sizeof(float)))];
     }
     p[i] = pi;
     ax[i] = axi;
