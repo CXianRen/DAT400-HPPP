@@ -86,6 +86,8 @@ int main(int argc, char** argv) {
 
   printf("Running parallel (outer loop).......................\n");
   ts = omp_get_wtime();
+  #pragma omp parallel
+  #pragma omp for schedule(static)
   for (i=0; i<N; i++) {            //FIXME: Parallelize
     float pi = 0;
     float axi = 0;
