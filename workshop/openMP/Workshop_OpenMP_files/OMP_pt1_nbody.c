@@ -86,28 +86,35 @@ int main(int argc, char** argv) {
 
   printf("Running parallel (outer loop).......................\n");
   ts = omp_get_wtime();
-  #pragma omp parallel
-  #pragma omp for schedule(static)
-  for (i=0; i<N; i++) {            //FIXME: Parallelize
-    float pi = 0;
-    float axi = 0;
-    float ayi = 0;
-    float xi = x[i];
-    float yi = y[i];
-    for (j=0; j<N; j++) {
-      float dx = x[j] - xi;
-      float dy = y[j] - yi;
-      float R2 = dx * dx + dy * dy + EPS2;
-      float invR = 1.0f / sqrtf(R2);
-      float invR3 = m[j] * invR * invR * invR;
-      pi += m[j] * invR;
-      axi += dx * invR3;
-      ayi += dy * invR3;
+  #pragma omp parallel private(i)
+  {
+    int thread_count = omp_get_num_threads();
+    int partition_size = N / thread_count;
+    int thread_id = omp_get_thread_num();
+    int start = thread_id * partition_size;
+    int end = (thread_id + 1 ==thread_count)? N: start+partition_size;
+    for (i=start; i<end; i++) {            //FIXME: Parallelize
+      float pi = 0;
+      float axi = 0;
+      float ayi = 0;
+      float xi = x[i];
+      float yi = y[i];
+      for (j=0; j<N; j++) {
+        float dx = x[j] - xi;
+        float dy = y[j] - yi;
+        float R2 = dx * dx + dy * dy + EPS2;
+        float invR = 1.0f / sqrtf(R2);
+        float invR3 = m[j] * invR * invR * invR;
+        pi += m[j] * invR;
+        axi += dx * invR3;
+        ayi += dy * invR3;
+      }
+      p[i] = pi;
+      ax[i] = axi;
+      ay[i] = ayi;
     }
-    p[i] = pi;
-    ax[i] = axi;
-    ay[i] = ayi;
   }
+  
   tf = omp_get_wtime();
   if(test(N, sol, p, ax, ay)) 
     printf("Time: %.4lfs -- PASS\n", tf - ts);
@@ -118,12 +125,14 @@ int main(int argc, char** argv) {
 
   printf("Running parallel (inner loop).......................\n");
   ts = omp_get_wtime();
+  // #pragma omp parallel
   for (i=0; i<N; i++) {
     float pi = 0;
     float axi = 0;
     float ayi = 0;
     float xi = x[i];
     float yi = y[i];
+    // #pragma omp for schedule(static)
     for (j=0; j<N; j++) {       //FIXME: Parallelize
       float dx = x[j] - xi;
       float dy = y[j] - yi;
