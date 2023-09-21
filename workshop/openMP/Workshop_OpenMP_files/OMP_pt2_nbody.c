@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 
   printf("Running parallel (outer loop with parallel for).....\n");
   ts = omp_get_wtime();
-
+  #pragma omp parallel for
  for (i=0; i<N; i++) {          //FIXME: Parallelize using OMP loop parallelization
     float pi = 0;
     float axi = 0;
@@ -117,13 +117,15 @@ int main(int argc, char** argv) {
 
   //TODO: LOOP - Question 3 - Parallelize the outer loop twice, first with static, then with dynamic scheduling
   //Note: No correctness test is applied in this test case, only execution time comparison. 
-
+  
   int * sz = malloc(N * sizeof(int));
   for (i = 0 ; i < N ; i++)
 	  sz[i] = rand()%N;
   printf("Running parallel (outer loop - static)..............\n");
-
+  
+  //  i:P, N: S, x:S, j:P, pi: S
   ts = omp_get_wtime();
+  #pragma omp for schedule(static)
   for (i=0; i<N; i++) {		//FIXME: Parallelize with static scheduling 
     float pi = 0;
     float axi = 0;
@@ -151,6 +153,7 @@ int main(int argc, char** argv) {
   printf("Running parallel (outer loop - dynamic).............\n");
 
   ts = omp_get_wtime();
+  #pragma omp for schedule(dynamic, 32) 
   for (i=0; i<N; i++) {		//FIXME: Parallelize with dynamic scheduling
     float pi = 0;
     float axi = 0;
