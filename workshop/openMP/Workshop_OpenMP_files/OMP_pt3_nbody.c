@@ -93,15 +93,18 @@ int main(int argc, char** argv) {
     float ayi = 0;
     float xi = x[i];
     float yi = y[i];
+    #pragma omp parallel for private(j) reduction(+:pi,axi,ayi)
     for (j=0; j<N; j++) {       //FIXME: Parallelize using OMP loop parallelization
       float dx = x[j] - xi;
       float dy = y[j] - yi;
       float R2 = dx * dx + dy * dy + EPS2;
       float invR = 1.0f / sqrtf(R2);
       float invR3 = m[j] * invR * invR * invR;
-      pi += m[j] * invR;
-      axi += dx * invR3;
-      ayi += dy * invR3;
+      // reduction
+          pi += m[j] * invR;
+          axi += dx * invR3;
+          ayi += dy * invR3;
+
     }
     p[i] = pi;
     ax[i] = axi;
@@ -119,21 +122,47 @@ int main(int argc, char** argv) {
   printf("Running parallel (inner loop with parallel for and synchronization).....\n");
   ts = omp_get_wtime();
  
+ // lock 
+ omp_lock_t lck;
+ omp_init_lock(&lck);
+
  for (i=0; i<N; i++) {
     float pi = 0;
     float axi = 0;
     float ayi = 0;
     float xi = x[i];
     float yi = y[i];
+    #pragma omp parallel for private(j) 
     for (j=0; j<N; j++) {       //FIXME: Parallelize using OMP loop parallelization
       float dx = x[j] - xi;
       float dy = y[j] - yi;
       float R2 = dx * dx + dy * dy + EPS2;
       float invR = 1.0f / sqrtf(R2);
       float invR3 = m[j] * invR * invR * invR;
-      pi += m[j] * invR;
-      axi += dx * invR3;
-      ayi += dy * invR3;
+      //  critical
+        // #pragma omp critical (sum)
+        // {
+        //   pi += m[j] * invR;
+        //   axi += dx * invR3;
+        //   ayi += dy * invR3;
+        // }
+
+      // atomic
+        #pragma omp atomic
+        pi += m[j] * invR;
+        #pragma omp atomic
+        axi += dx * invR3;
+        #pragma omp atomic
+        ayi += dy * invR3;
+
+      // lock
+      //  omp_set_lock(&lck);
+      //     pi += m[j] * invR;
+      //     axi += dx * invR3;
+      //     ayi += dy * invR3;
+      //  omp_unset_lock(&lck);
+
+
     }
     p[i] = pi;
     ax[i] = axi;

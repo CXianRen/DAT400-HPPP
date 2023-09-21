@@ -20,19 +20,25 @@ size_t fib_parallel(int n) {
     size_t l, r;
     if (n < 2) 
         return n;
-    l = fib(n - 1);
-    r = fib(n - 2);
-
+    #pragma omp task shared(l) firstprivate(n)
+    l = fib_parallel(n - 1);
+    #pragma omp task shared(r) firstprivate(n)
+    r = fib_parallel(n - 2);
+    #pragma omp taskwait
     return l + r;
 }
 
 //TODO: TASKS - Bonus question - Parallelize with tasks and control over task creation
+#define THREADHOLD 5
 size_t fib_parallel_control(int n) {
     size_t l, r;
     if (n < 2) 
         return n;
-    l = fib(n - 1);
-    r = fib(n - 2);
+    #pragma omp task shared(l)  final(n<THREADHOLD) firstprivate(n)
+    l = fib_parallel_control(n - 1);
+    #pragma omp task shared(r)  final(n<THREADHOLD) firstprivate(n)
+    r = fib_parallel_control(n - 2);
+    #pragma omp taskwait
     return l + r;
 }
 
@@ -65,9 +71,12 @@ int main(int argc, char** argv) {
   printf("Running parallel with tasks........................\n");
 
   ts = omp_get_wtime();
-  
-  res = fib_parallel(N);        //FIXME: Parallelize with tasks
-  
+  #pragma opm parallel
+  {
+    #pragma omp single
+    res = fib_parallel(N);        //FIXME: Parallelize with tasks
+  }
+
   tf = omp_get_wtime();
   
   if (res == serial_res)
@@ -82,8 +91,11 @@ int main(int argc, char** argv) {
   printf("Running parallel with tasks and control............\n");
 
   ts = omp_get_wtime();
-
-  res = fib_parallel_control(N);    // FIXME: Parallelize with tasks
+  #pragma opm parallel
+  {
+    #pragma omp single
+    res = fib_parallel_control(N);    // FIXME: Parallelize with tasks
+  }
 
   tf = omp_get_wtime();
  

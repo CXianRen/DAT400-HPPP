@@ -93,6 +93,7 @@ int main(int argc, char** argv) {
     float ayi = 0;
     float xi = x[i];
     float yi = y[i];
+    #pragma omp simd reduction(+:pi,axi,ayi)
     for (j=0; j<N; j++) {       //FIXME: Vectorize with reduction support
       float dx = x[j] - xi;
       float dy = y[j] - yi;
@@ -126,6 +127,7 @@ int main(int argc, char** argv) {
     float ayi = 0;
     float xi = x[i];
     float yi = y[i];
+    #pragma omp parallel for reduction(+:pi,axi,ayi)
     for (j=0; j<N; j++) {       //FIXME: Parallelize using OMP loop parallelization
       float dx = x[j] - xi;
       float dy = y[j] - yi;
