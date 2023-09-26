@@ -75,7 +75,14 @@ int main(int argc, char ** argv) {
 	//----Question 3: Provide a solution that avoids deadlocks
 	//TODO: Implement the same rotating ring communication.
 	//TODO: What type of Send and Recv routines you will use? In which order?
-
+	MPI_Request request;
+	for (i = 0 ; i < size  ; i++) {
+		MPI_Isend(&passon, 1, MPI_DOUBLE, right, i, MPI_COMM_WORLD, &request);
+		MPI_Recv(&addon, 1, MPI_DOUBLE, left, i, MPI_COMM_WORLD, &status);
+		pi = pi + addon;
+		passon = addon;
+		MPI_Wait(&request,&status);
+	}
 	//----
 #endif
 	//Final result is collected on all ranks, rank 0 performs the printing
