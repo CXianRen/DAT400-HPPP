@@ -14,9 +14,9 @@ int main(int argc, char ** argv) {
 	//---- Question 1: Discover the number of processes and rank (ID) of each process 
 	int size, rank;
 	//TODO: Get the number of processes in variable "size"
-	
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	//TODO: Get the rank of each current process in variable "rank"
-
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	//----
 	
 
@@ -32,11 +32,14 @@ int main(int argc, char ** argv) {
 	//---- Question 2: Compute the loop boundaries "start", "end", for each process in SPMD style
 
 	int partitions; //TODO: compute how many iteretions should be assigned to each process
+	partitions = 0.0;
 	int start; 	//TODO: compute loop start
+	start = 1 + rank * N/size;
 	int end; 	//TODO: compute loop end
+	end = start + N/size;
 	
 	//TODO: Correct the loop boundaries for the last process 
-
+	if(rank==size-1) end = N+1;
 	//----
 
 
@@ -50,18 +53,21 @@ int main(int argc, char ** argv) {
 	//TODO: How many sends will be issued, and how many receives? Which processes need to call them?
 	//TODO: Make sure that rank 0 sums all partial sums
 
-	int tag; 			// FIXME: Message tag, will need initialization 
+	int tag = MPI_ANY_TAG; 			// FIXME: Message tag, will need initialization 
 	MPI_Status status;		// MPI variable to collect the status of communication
 	double partial_pi_to_recv;	// Temporary store of "partial_pi" received from other processes
 			
 	if (rank != 0) 
 		//TODO: Implement communication - all ranks but rank 0
-		;
+		MPI_Send(&partial_pi,1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
 	else {
-		//TODO: Implement communication - rank 0
-			
+		//TODO: Implement communication - rank 0	
+		pi = partial_pi;		
 		//TODO: Rank 0 should also sum all partial sums of pi
-		;	
+		for(int i = 1; i < size; i++){
+			MPI_Recv(&partial_pi_to_recv,1, MPI_DOUBLE, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+			pi += partial_pi_to_recv;
+		}
 	}	
 	//----
 
