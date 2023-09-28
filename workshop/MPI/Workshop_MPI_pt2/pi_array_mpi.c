@@ -7,8 +7,6 @@
 
 #define N 10000
 
-#define COLL 1
-
 int main(int argc, char ** argv) {
 	MPI_Init(&argc, &argv);
 
@@ -104,7 +102,7 @@ int main(int argc, char ** argv) {
 #elif COLL 
 	//----Question 2: Use the appropriate MPI collective to reduce partial sums "partial_pi" in "pi" on rank 0
 	//TODO: Rank 0 to receive a sum of all partial sums
-	
+	MPI_Reduce(&partial_pi,&pi,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 	//----
 #endif
 
@@ -122,14 +120,14 @@ int main(int argc, char ** argv) {
 #elif COLL
 	//----Question 3: Use the appropriate MPI collective to distribute the full sum from rank 0 to all processes
 	//TODO: All processes to receive the full sum in "pi"
-	
+	MPI_Bcast(&pi,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	//----
 #endif
 
 #ifdef COLL_OPT
 	//----Question 4: Use a single MPI collective to optimize the previous two collective calls (Questions 2 and 3)
 	//TODO: All processes to receive the full sum in "pi" from partial sums in "partial_pi"
-	
+	MPI_Allreduce(&partial_pi,&pi,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	//----
 #endif
 	//All processes print the final result
