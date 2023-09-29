@@ -1,0 +1,7 @@
+#!/bin/bash
+
+LOCAL_DIR=/scratch/SW_packages
+export PATH=${LOCAL_DIR}/bin:$PATH
+export LD_LIBRARY_PATH=${LOCAL_DIR}/lib:$LD_LIBRARY_PATH
+export C_INCLUDE_PATH=${LOCAL_DIR}/include:$C_INCLUDE_PATH
+export CPLUS_INCLUDE_PATH=${LOCAL_DIR}/include:$CPLUS_INCLUDE_PATH
