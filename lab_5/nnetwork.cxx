@@ -81,7 +81,9 @@ int main(int argc, char * argv[]) {
   vector <float> W1 = random_vector(784*128);
   vector <float> W2 = random_vector(128*64);
   vector <float> W3 = random_vector(64*10);
-
+  vector<float> dW3_sum(W3.size());
+  vector<float> dW2_sum(W2.size());
+  vector<float> dW1_sum(W1.size());
 #ifdef USE_MPI
   // Sync initial W1 W2 W3 to all process
   MPI_Bcast(W1.data(), W1.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
@@ -131,18 +133,17 @@ int main(int argc, char * argv[]) {
     // Updating the parameters
 #ifdef USE_MPI
     // sync dw
-    dW3 = -lr* dW3;
-    dW2 = -lr* dW2;
-    dW1 = -lr* dW1;
-    MPI_Allreduce(dW3.data(), W3.data(), W3.size(), MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(dW2.data(), W2.data(), W2.size(), MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(dW1.data(), W1.data(), W1.size(), MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(dW3.data(), dW3_sum.data(), dW3.size(), MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(dW2.data(), dW2_sum.data(), dW2.size(), MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(dW1.data(), dW1_sum.data(), dW1.size(), MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    W3 = W3 -lr* dW3_sum;
+    W2 = W2 -lr* dW2_sum;
+    W1 = W1 -lr* dW1_sum;
 #else
     W3 = W3 -lr* dW3;
     W2 = W2 -lr* dW2;
     W1 = W1 -lr* dW1;
 #endif
-
     if ((mpirank == 0) && (i+1) % 100 == 0){          
       cout << "Predictions:" << "\n";
       print ( yhat, 10, 10 );
