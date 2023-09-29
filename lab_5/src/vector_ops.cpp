@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 #include "vector_ops.h" 
-
+#include <omp.h>
 // #define INTERCHANGE
 // #define BLOCK_TILE 
 // #define USE_PTHREAD 
@@ -266,13 +266,18 @@ vector <float> dot (const vector <float>& m1, const vector <float>& m2, const in
             }
         }
     #else
+    omp_set_num_threads(4)
+    #pragma omp parallerl
+    {
+        #pragma omp for
         for( int row = 0; row < m1_rows; ++row ) {
-            for( int col = 0; col < m2_columns; ++col ) {
-                for( int k = 0; k < m1_columns; ++k ) {
+            for( int k = 0; k < m1_columns; ++k) {
+                for( int col = 0; col < m2_columns; ++col  ) {
                     output[ row * m2_columns + col ] += m1[ row * m1_columns + k ] * m2[ k * m2_columns + col ];
                 }
             }
         }
+    }
     #endif
 
 #endif
