@@ -1,6 +1,7 @@
 IDIR=include
 CXX=mpicxx
-CXXFLAGS=-I$(IDIR) -std=c++11 -fopenmp -O3
+MPICXX=mpicxx
+CXXFLAGS=-I$(IDIR) -std=c++11 -fopenmp -O3 -g
 
 ODIR=src
 LDIR =../lib
@@ -38,7 +39,7 @@ run_perf:
 	sudo perf stat -e LLC-misses ./nnetwork
 
 run_parallel:
-	mpirun -np 4 ./nnetwork_mpi
+	mpirun -np 1 ./nnetwork_mpi
 
 all: clean nnetwork_mpi nnetwork
 .PHONY: clean
