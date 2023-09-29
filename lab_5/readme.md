@@ -22,4 +22,10 @@ Iteration #: 999
 Iteration Time: 0.0062754s
 Forward and Backward Time(s) per epoch:0.005907 94.1295% time spend at dot in an epoch
 Loss: 3.59998
+
+# with open mp
+Iteration #: 999
+Iteration Time: 0.00246936s
+Forward and Backward Time(s) per epoch:0.001918 77.6719% time spend at dot in an epoch
+Loss: 3.59998
 ```

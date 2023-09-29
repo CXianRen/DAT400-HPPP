@@ -266,7 +266,7 @@ vector <float> dot (const vector <float>& m1, const vector <float>& m2, const in
             }
         }
     #else
-    omp_set_num_threads(4)
+    omp_set_num_threads(4);
     #pragma omp parallerl
     {
         #pragma omp for
