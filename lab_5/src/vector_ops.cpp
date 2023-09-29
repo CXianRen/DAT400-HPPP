@@ -6,7 +6,7 @@
 #include "vector_ops.h" 
 
 // #define INTERCHANGE
-#define BLOCK_TILE 
+// #define BLOCK_TILE 
 // #define USE_PTHREAD 
 
 #ifdef USE_PTHREAD
