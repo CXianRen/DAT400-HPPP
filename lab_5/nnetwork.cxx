@@ -144,26 +144,36 @@ int main(int argc, char * argv[]) {
     W2 = W2 -lr* dW2;
     W1 = W1 -lr* dW1;
 #endif
-    if ((mpirank == 0) && (i+1) % 100 == 0){          
-      cout << "Predictions:" << "\n";
-      print ( yhat, 10, 10 );
-      cout << "Ground truth:" << "\n";
-      print ( b_y, 10, 10 );      
+  
+    if ((i+1) % 100 == 0){     
       vector<float> loss_m = yhat - b_y;
-      float loss = 0.0;
+      float loss = 0.0, local_loss =0.0;
       for (unsigned k = 0; k < BATCH_SIZE*10; ++k){
-        loss += loss_m[k]*loss_m[k];
-      }      
-      t2 = std::chrono::system_clock::now();
-      chrono::duration<double> elapsed_seconds = t2-t1;
-      double ticks = elapsed_seconds.count();
-      cout << "Iteration #: "  << i << endl;
-      cout << "Iteration Time: "  << ticks << "s" << endl;
-      double diff_t = (end->tv_sec-start->tv_sec) + (end->tv_usec-start->tv_usec)/1000.0/1000.0;
-      cout << "Forward and Backward Time(s) per epoch:" << 
-        diff_t << " " << (diff_t/ticks)*100 <<"% time spend at dot in an epoch" <<endl;
-      cout << "Loss: " << loss/BATCH_SIZE << endl;
-      cout << "*******************************************" << endl;
+        local_loss += loss_m[k]*loss_m[k];
+      }
+      local_loss /= BATCH_SIZE;
+#ifdef USE_MPI
+      MPI_Reduce(&local_loss,&loss,1,MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+#else 
+      loss = local_loss;
+#endif
+      if((mpirank == 0)){
+        cout << "Predictions:" << "\n";
+        print ( yhat, 10, 10 );
+        cout << "Ground truth:" << "\n";
+        print ( b_y, 10, 10 );      
+      
+        t2 = std::chrono::system_clock::now();
+        chrono::duration<double> elapsed_seconds = t2-t1;
+        double ticks = elapsed_seconds.count();
+        cout << "Iteration #: "  << i << endl;
+        cout << "Iteration Time: "  << ticks << "s" << endl;
+        double diff_t = (end->tv_sec-start->tv_sec) + (end->tv_usec-start->tv_usec)/1000.0/1000.0;
+        cout << "Forward and Backward Time(s) per epoch:" << 
+          diff_t << " " << (diff_t/ticks)*100 <<"% time spend at dot in an epoch" <<endl;
+        cout << "Loss: " << loss << endl;
+        cout << "*******************************************" << endl;
+        }
     };      
   };
 #ifdef USE_MPI
