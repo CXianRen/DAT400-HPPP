@@ -39,7 +39,7 @@ run_perf:
 	sudo perf stat -e LLC-misses ./nnetwork
 
 run_parallel:
-	mpirun -np 4 ./nnetwork_mpi
+	mpirun -np 1 ./nnetwork_mpi
 
 all: clean nnetwork_mpi nnetwork
 .PHONY: clean

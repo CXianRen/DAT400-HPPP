@@ -14,6 +14,7 @@
 #include "deep_core.h"
 #include "vector_ops.h"
 #include <sys/time.h>
+#include <iomanip>
 #ifdef USE_MPI
   #include <mpi.h>
 #endif
@@ -74,9 +75,10 @@ int main(int argc, char * argv[]) {
   int ysize = static_cast<int>(y_train.size());
   
   // Some hyperparameters for the NN
-  // for each mpi process, batch size = 256/ 
+  // for each mpi process, batch size = 256/len
   int BATCH_SIZE = 256 / len;
-  float lr = .01/BATCH_SIZE;
+  float lr = .01/ 256;
+  std::cout<<"lr:" << lr <<std::endl;
   // Random initialization of the weights
   vector <float> W1 = random_vector(784*128);
   vector <float> W2 = random_vector(128*64);
@@ -98,13 +100,23 @@ int main(int argc, char * argv[]) {
   for (unsigned i = 0; i < 1000; ++i) {    
     t1 = std::chrono::system_clock::now();    
     // Building batches of input variables (X) and labels (y)
-    int randindx = rand() % (42000-BATCH_SIZE);
+    int randindx = 0;
+    if(randindx==0){
+      randindx = rand() % (42000-BATCH_SIZE*len);
+    }
+#ifdef USE_MPI
+    MPI_Bcast(&randindx,1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
+    // for debug
+    // std::cout<<"rankid:"<< mpirank<<  " randindx:" << randindx << std::endl;/
+
     vector<float> b_X;
     vector<float> b_y;
-    for (unsigned j = randindx*784; j < (randindx+BATCH_SIZE)*784; ++j){
+    // std::cout<<"rankid:"<< mpirank<<  " start:" << randindx+mpirank*BATCH_SIZE << " end:" <<  randindx+(mpirank+1) * BATCH_SIZE  << std::endl;
+    for (unsigned j = (randindx+mpirank*BATCH_SIZE)*784; j < (randindx+(mpirank+1) * BATCH_SIZE)*784; ++j){
       b_X.push_back(X_train[j]);
     }
-    for (unsigned k = randindx*10; k < (randindx+BATCH_SIZE)*10; ++k){
+    for (unsigned k = (randindx+mpirank*BATCH_SIZE )*10; k < (randindx+ (mpirank+1) *BATCH_SIZE)*10; ++k){
       b_y.push_back(y_train[k]);
     }
 
@@ -131,29 +143,39 @@ int main(int argc, char * argv[]) {
 
 
     // Updating the parameters
+    // if(mpirank==0){
+    //   std::cout<< i<<" bef:" << dW3[0] << " " << W3[0] << " " << std::setprecision(8) << dW3_sum[0] << std::endl;
+    // } 
+
 #ifdef USE_MPI
     // sync dw
     MPI_Allreduce(dW3.data(), dW3_sum.data(), dW3.size(), MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(dW2.data(), dW2_sum.data(), dW2.size(), MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(dW1.data(), dW1_sum.data(), dW1.size(), MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-    W3 = W3 -lr* dW3_sum;
-    W2 = W2 -lr* dW2_sum;
-    W1 = W1 -lr* dW1_sum;
+
+    W3 = W3 - lr* dW3_sum;
+    W2 = W2 - lr* dW2_sum;
+    W1 = W1 - lr* dW1_sum;
+    
 #else
     W3 = W3 -lr* dW3;
     W2 = W2 -lr* dW2;
     W1 = W1 -lr* dW1;
 #endif
-  
+    // if(mpirank==0){
+    //   std::cout<< i <<" upd:" << dW3[0] << " " << W3[0] << " " << std::setprecision(8) << dW3_sum[0] << std::endl;
+    // } 
+
     if ((i+1) % 100 == 0){     
       vector<float> loss_m = yhat - b_y;
       float loss = 0.0, local_loss =0.0;
       for (unsigned k = 0; k < BATCH_SIZE*10; ++k){
         local_loss += loss_m[k]*loss_m[k];
       }
-      local_loss /= BATCH_SIZE;
+      // std::cout<< "rank_id:" << mpirank << " local loss:" << local_loss  << " W3:" << W3[0] << std::endl;
 #ifdef USE_MPI
       MPI_Reduce(&local_loss,&loss,1,MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+      loss= loss / len;
 #else 
       loss = local_loss;
 #endif
@@ -171,7 +193,7 @@ int main(int argc, char * argv[]) {
         double diff_t = (end->tv_sec-start->tv_sec) + (end->tv_usec-start->tv_usec)/1000.0/1000.0;
         cout << "Forward and Backward Time(s) per epoch:" << 
           diff_t << " " << (diff_t/ticks)*100 <<"% time spend at dot in an epoch" <<endl;
-        cout << "Loss: " << loss << endl;
+        cout << "Loss: " << loss / BATCH_SIZE << endl;
         cout << "*******************************************" << endl;
         }
     };      
