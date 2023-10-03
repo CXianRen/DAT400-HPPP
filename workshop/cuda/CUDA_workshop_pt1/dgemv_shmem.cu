@@ -89,10 +89,8 @@ __global__ void cudaDGEMV_shmem(float * A, float * x, float * b, int M, int N) {
 	int offset =0;
 	sum[idx] = 0;
 	
-	for(int i = 0; i< step; i++){
-		offset = idx* step + i;
-		if(offset<N)
-			sum[idx] += A[row + offset] * x[offset];
+	for(int i = 0; i< step &&  idx* step + i< N; i++){	
+			sum[idx] += A[row + idx* step + i] * x[idx* step + i];
 	}
 	__syncthreads();
 #if LINEAR_REDUCTION

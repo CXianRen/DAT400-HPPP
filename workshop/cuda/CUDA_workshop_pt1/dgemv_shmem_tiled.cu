@@ -79,7 +79,22 @@ __global__ void cudaDGEMV_shmem(float * A, float * x, float * b, int M, int N) {
 	//TODO: Question 3 - Fill in this function to perform matrix-vector multiplication on the GPU
 	//TODO: Each thread should access a single row of matrix A
 	//TODO: You need to declare a shared memory array to copy part of the "x" vector in the local memory 	
+	__shared__ float temp_x[BLOCK_DIM];
+	
+	int row =blockIdx.x * blockDim.x + threadIdx.x;
+	b[row] = 0;
 
+	int step = N/BLOCK_DIM;
+	for(int s=0; s<step; s++){
+		// cp
+		temp_x[threadIdx.x] = x[threadIdx.x + s * BLOCK_DIM];
+		__syncthreads();
+		// do mult
+		for( int i =0 ;i < BLOCK_DIM; i++){
+			b[row] +=  A[row* N + s*BLOCK_DIM + i] * temp_x[i];
+		}
+		__syncthreads();
+	}
 }
 
 
@@ -188,7 +203,7 @@ int main(int argc, char ** argv) {
 
 	//TODO: Select the grid dimensions (blocks)
 	//Assume a 1D grid
-	gridX = M;	//TODO: Select the number of blocks
+	gridX = M/BLOCK_DIM;	//TODO: Select the number of blocks
 	gridY = 1; 
 	gridZ = 1;
 	numBlock = {gridX, gridY, gridZ};
