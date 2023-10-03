@@ -28,3 +28,7 @@ Iteration Time: 0.00246936s
 Forward and Backward Time(s) per epoch:0.001918 77.6719% time spend at dot in an epoch
 Loss: 3.59998
 ```
+
+
+export EXTRAE_CONFIG_FILE=$(pwd)/extrae.xml
+export LD_PRELOAD=/scratch/SW_packages/lib/libompitrace.so
