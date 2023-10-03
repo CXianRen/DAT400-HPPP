@@ -6,7 +6,7 @@
 
 //Problem size M x N
 #define M_ 8192
-#define N_ 8192
+#define N_ 1024
 
 //A sample dimension for the block (number of threads per block)
 #define BLOCK_DIM 1024	
@@ -80,11 +80,23 @@ __global__ void cudaDGEMV_shmem(float * A, float * x, float * b, int M, int N) {
 	//TODO: We have declared a shared memory array equal to the number of threads in a block
 	//TODO: Use this array to reduce intermediate values for the vector "b"
 	__shared__ float sum[BLOCK_DIM];	//Declare shmem array equal to number of threads in a block 
+	
+	int idx = threadIdx.x;
+	int row = blockIdx.x * blockDim.x;
+	
+	// if(idx<N){
+		sum[idx] = A[row + idx] * x[idx];
+	// }
+	
 
-
+	__syncthreads();
 #if LINEAR_REDUCTION
 	//TODO: Question 1 - Perform reduction on output vector "b"
-
+	if(idx==0){
+		b[blockIdx.x]=0;
+		for(int i=0; i<BLOCK_DIM; i++)
+		b[blockIdx.x]+=sum[i];
+	}
 
 #elif BINARY_REDUCTION
 	//TODO: Question 2 - Perform a binary reduction on output vector "b"
@@ -193,7 +205,7 @@ int main(int argc, char ** argv) {
 	//Assume a 1D block
 	blockX = BLOCK_DIM;	//TODO: Select the number of threads per block
 	blockY = 1;
-       	blockZ = 1;
+    blockZ = 1;
 	threadsPerBlock = {blockX, blockY, blockZ};
 
 	//TODO: Select the grid dimensions (blocks)

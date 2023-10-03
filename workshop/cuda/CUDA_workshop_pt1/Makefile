@@ -30,8 +30,8 @@ run_pt1:
 
 build_pt2: dgemv_shmem_linear dgemv_shmem_binary dgemv_shmem_tiled
 	./dgemv_shmem_linear
-	./dgemv_shmem_binary
-	./dgemv_shmem_tiled
+#	./dgemv_shmem_binary
+#	./dgemv_shmem_tiled
 
 clean:
 	rm *.o dgemv_naive dgemv_shmem_linear dgemv_shmem_binary dgemv_shmem_tiled
