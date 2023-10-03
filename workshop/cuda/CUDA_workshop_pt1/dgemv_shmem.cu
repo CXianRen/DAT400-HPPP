@@ -82,13 +82,18 @@ __global__ void cudaDGEMV_shmem(float * A, float * x, float * b, int M, int N) {
 	__shared__ float sum[BLOCK_DIM];	//Declare shmem array equal to number of threads in a block 
 	
 	int idx = threadIdx.x;
-	int row = blockIdx.x * blockDim.x;
-	
-	// if(idx<N){
-		sum[idx] = A[row + idx] * x[idx];
-	// }
-	
+	size_t row = blockIdx.x * N;
+	int step = N/BLOCK_DIM; 
+	if(N%BLOCK_DIM) step++;
 
+	int offset =0;
+	sum[idx] = 0;
+	
+	for(int i = 0; i< step; i++){
+		offset = idx* step + i;
+		if(offset<N)
+			sum[idx] += A[row + offset] * x[offset];
+	}
 	__syncthreads();
 #if LINEAR_REDUCTION
 	//TODO: Question 1 - Perform reduction on output vector "b"
