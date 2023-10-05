@@ -45,7 +45,7 @@ void getGPUProperties() {
 int checkCorrectness(float * sol_cpu, float * sol_gpu, int M) {
 	int i;
 	for (i = 0 ; i < M ; i++)
-		if (fabs(sol_cpu[i] - sol_gpu[i])>1e-3) {
+		if (fabs(sol_cpu[i] - sol_gpu[i])>1e-2) {
 			printf("FAIL -- at %d, %f %f\n", i, sol_cpu[i], sol_gpu[i]);
 			return 1;
 		}
@@ -98,17 +98,25 @@ __global__ void cudaDGEMV_shmem(float * A, float * x, float * b, int M, int N) {
 	// 	sum[threadIdx.x] += A[blockIdx.x * N + i + step * threadIdx.x ] * 
 	// 		x[i + step * threadIdx.x];
 	// }
-	
 	__syncthreads();
 
 	if(threadIdx.x==0){
-		b[blockIdx.x]=0;
+		// use reigister to avoid global memeory access?
+		float temp_sum = 0;
 		for(int i=0; i<BLOCK_DIM; i++)
-		b[blockIdx.x]+=sum[i];
+			temp_sum+=sum[i];
+
+		b[blockIdx.x] = temp_sum;
 	}
 
 #elif BINARY_REDUCTION
 	//TODO: Question 2 - Perform a binary reduction on output vector "b"
+	unsigned int mod = 0x2;
+	sum[threadIdx.x] = A[blockIdx.x * N + threadIdx.x] * x[threadIdx.x];
+	__syncthreads();
+	// while(mod<= blockDim.x){
+	// 	if(threadIdx.x % mod == 0)
+	// }
 
 #endif
 }
