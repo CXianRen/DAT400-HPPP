@@ -6,7 +6,7 @@
 
 //Problem size M x N
 #define M_ 8192
-#define N_ 1024
+#define N_ 8192
 
 //A sample dimension for the block (number of threads per block)
 #define BLOCK_DIM 1024	
@@ -80,22 +80,28 @@ __global__ void cudaDGEMV_shmem(float * A, float * x, float * b, int M, int N) {
 	//TODO: We have declared a shared memory array equal to the number of threads in a block
 	//TODO: Use this array to reduce intermediate values for the vector "b"
 	__shared__ float sum[BLOCK_DIM];	//Declare shmem array equal to number of threads in a block 
-	
-	int idx = threadIdx.x;
-	size_t row = blockIdx.x * N;
+
+#if LINEAR_REDUCTION
+	//TODO: Question 1 - Perform reduction on output vector "b"
 	int step = N/BLOCK_DIM; 
 	if(N%BLOCK_DIM) step++;
 
-	int offset =0;
-	sum[idx] = 0;
-	
-	for(int i = 0; i< step &&  idx* step + i< N; i++){	
-			sum[idx] += A[row + idx* step + i] * x[idx* step + i];
+	sum[threadIdx.x] = 0;	
+	/* method 1: each thread handles step elements (discontinuous) */
+	for(int i = 0; i< step && i * BLOCK_DIM + threadIdx.x< N; i++){
+		sum[threadIdx.x] += A[blockIdx.x * N + i * BLOCK_DIM + threadIdx.x ] * 
+			x[i * BLOCK_DIM + threadIdx.x];
 	}
+
+	/* method 2: each thread handles step elemetns (continous) */
+	// for(int i = 0; i < step && i + step * threadIdx.x<N; i++){
+	// 	sum[threadIdx.x] += A[blockIdx.x * N + i + step * threadIdx.x ] * 
+	// 		x[i + step * threadIdx.x];
+	// }
+	
 	__syncthreads();
-#if LINEAR_REDUCTION
-	//TODO: Question 1 - Perform reduction on output vector "b"
-	if(idx==0){
+
+	if(threadIdx.x==0){
 		b[blockIdx.x]=0;
 		for(int i=0; i<BLOCK_DIM; i++)
 		b[blockIdx.x]+=sum[i];
