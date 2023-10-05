@@ -111,12 +111,29 @@ __global__ void cudaDGEMV_shmem(float * A, float * x, float * b, int M, int N) {
 
 #elif BINARY_REDUCTION
 	//TODO: Question 2 - Perform a binary reduction on output vector "b"
-	unsigned int mod = 0x2;
 	sum[threadIdx.x] = A[blockIdx.x * N + threadIdx.x] * x[threadIdx.x];
 	__syncthreads();
-	// while(mod<= blockDim.x){
-	// 	if(threadIdx.x % mod == 0)
-	// }
+	unsigned int mod = 2;
+	/*
+	 *	 0 1 2 3 4 5 6 7 
+	 *   | / | / | / | /
+	 *   1 1 5 3 9 5 13 7
+	 *   |   /   |   /
+	 *   6       22
+	 *   |       /
+	 *   28 
+	 */ 
+	while(mod<= blockDim.x){
+		if(threadIdx.x % mod == 0){
+			sum[threadIdx.x] += sum[threadIdx.x + mod/2];
+		}
+		mod *=2;
+		__syncthreads();
+	}
+
+	if(threadIdx.x==0){
+		b[blockIdx.x] =sum[0];
+	}
 
 #endif
 }
