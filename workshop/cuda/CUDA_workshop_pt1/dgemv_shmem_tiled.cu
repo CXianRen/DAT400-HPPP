@@ -82,19 +82,29 @@ __global__ void cudaDGEMV_shmem(float * A, float * x, float * b, int M, int N) {
 	__shared__ float temp_x[BLOCK_DIM];
 	
 	int row =blockIdx.x * blockDim.x + threadIdx.x;
-	b[row] = 0;
+	// use local temparay variable to make it faster.
+	float sum = 0;
 
 	int step = N/BLOCK_DIM;
+	if(N%BLOCK_DIM) step++;
+
 	for(int s=0; s<step; s++){
 		// cp
-		temp_x[threadIdx.x] = x[threadIdx.x + s * BLOCK_DIM];
+		if(threadIdx.x + s * BLOCK_DIM < N){
+			temp_x[threadIdx.x] = x[threadIdx.x + s * BLOCK_DIM];
+		}
 		__syncthreads();
 		// do mult
-		for( int i =0 ;i < BLOCK_DIM; i++){
-			b[row] +=  A[row* N + s*BLOCK_DIM + i] * temp_x[i];
+		for( int i =0 ;i < BLOCK_DIM && s*BLOCK_DIM + i < N; i++){
+			// use local temparay variable to make it faster. so we dont't add it to b[row] directively.
+			sum +=  A[row* N + s*BLOCK_DIM + i] * temp_x[i];
 		}
 		__syncthreads();
 	}
+
+	if(row<M)
+		b[row] = sum;
+
 }
 
 
@@ -203,7 +213,7 @@ int main(int argc, char ** argv) {
 
 	//TODO: Select the grid dimensions (blocks)
 	//Assume a 1D grid
-	gridX = M/BLOCK_DIM;	//TODO: Select the number of blocks
+	gridX = M/BLOCK_DIM + (M%BLOCK_DIM>0);	//TODO: Select the number of blocks
 	gridY = 1; 
 	gridZ = 1;
 	numBlock = {gridX, gridY, gridZ};
