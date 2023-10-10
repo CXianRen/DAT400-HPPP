@@ -6,7 +6,7 @@
 //CUDA RunTime API
 #include <cuda_runtime.h>
 
-#define MATRIX_SIZE 32
+#define MATRIX_SIZE 1024
 
 void printDeviceProp(const cudaDeviceProp &prop)
 {
@@ -69,7 +69,7 @@ void matgen(float* a, int n)
     {
         for (j = 0; j < n; j++)
         {
-            a[i * n + j] = (float)rand() / RAND_MAX + (float)rand() / (RAND_MAX * RAND_MAX);
+            a[i * n + j] = (float)rand() / RAND_MAX + (float)rand() / RAND_MAX / RAND_MAX;
         }
     }
 }
@@ -77,40 +77,53 @@ void matgen(float* a, int n)
 /* Task 1 & 2: Implement Your Kernel Function Here */
 __global__ static void matMultCUDA(const float* a, const float* b, float* c, int n)
 {
-    // 4 blocks, each block handle n/2 lines
+    // n blocks == n tils, each block handle n/2 lines
     int blk_each_dim = __dsqrt_rn((gridDim.x*gridDim.y* gridDim.z));
     int bid = blockIdx.z * (gridDim.x * gridDim.y) + blockIdx.y* gridDim.x + blockIdx.x;
 
     int bid_y = bid / blk_each_dim; 
     int bid_x = bid % blk_each_dim;
 
+    int total_thread = blockDim.x * blockDim.y * blockDim.z;
     int tid = threadIdx.z * (blockDim.x * blockDim.y) + threadIdx.y * blockDim.x + threadIdx.x;
 
-    int step = n / blk_each_dim;
+    // how many rows in a tile;
+    int blk_step = n / blk_each_dim + (n % blk_each_dim>0);
+    // how many elements in each tile 
+    int elements = blk_step * blk_step;
+    // how many elements each thread should calculate.
+    int step = elements/total_thread + (elements%total_thread>0);
+    
 
-    int ty = tid / step;
-    int tx = tid % step;
-    
-    int row = bid_y * step + ty;
-    //  bid_x th blk in col direction 
-    int col = bid_x * step + tx;
-    // int col = tx;
-    
-    float sum = 0;
-    if(row<n){
-        for(int i=0;i<n;i++){
-            sum+= a[row*n+i] * b[i*n + col];
-        }
-        c[row * n + col] = sum;
+    int temp_tid = 0, ty = 0, tx =0, row = 0, col = 0;
+    for(int s=0; s<step; s++){
+        temp_tid = tid + s* total_thread;
+        if(temp_tid < elements){
+            ty = temp_tid / blk_step;
+            tx = temp_tid % blk_step;
+
+            row = bid_y * blk_step + ty;
+            //  bid_x th blk in col direction 
+            col = bid_x * blk_step + tx;
+            // int col = tx;
+            float sum = 0;
+            if(row<n && col<n){
+                for(int i=0;i<n;i++){
+                    sum+= a[row*n+i] * b[i*n + col];
+                }
+                c[row * n + col] = sum;
+            }
+        } 
     }
 }
 
 int main(int argc, char** argv)
 {   
+    int n = MATRIX_SIZE;
     int gx=4,gy=1,gz=1;
     int bx=256,by=1,bz=1;
 
-    if(argc < 7){
+    if(argc < 8){
         printf("use default griddim (4,1,1), blockdim(256,1,1)\n");
     }else
     {
@@ -122,6 +135,8 @@ int main(int argc, char** argv)
         by = atoi(argv[5]);
         bz = atoi(argv[6]);
 
+        n = atoi(argv[7]);
+
     }
 
 
@@ -130,7 +145,7 @@ int main(int argc, char** argv)
 
     float *a, *b, *c, *d;
 
-    int n = MATRIX_SIZE;
+
 
     a = (float*)malloc(sizeof(float)* n * n); 
     b = (float*)malloc(sizeof(float)* n * n); 
