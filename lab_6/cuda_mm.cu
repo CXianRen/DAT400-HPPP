@@ -94,19 +94,23 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
     // how many elements each thread should calculate.
     int step = elements/total_thread + (elements%total_thread>0);
     
-
     int temp_tid = 0, ty = 0, tx =0, row = 0, col = 0;
+    float sum = 0.0;
     for(int s=0; s<step; s++){
         temp_tid = tid + s* total_thread;
         if(temp_tid < elements){
+            // y in a tile
             ty = temp_tid / blk_step;
+            // x in a tile
             tx = temp_tid % blk_step;
 
+            // row in A
             row = bid_y * blk_step + ty;
-            //  bid_x th blk in col direction 
+            // col in A
             col = bid_x * blk_step + tx;
-            // int col = tx;
-            float sum = 0;
+
+            sum = 0;
+            // in case n % blk_each_dim !=0
             if(row<n && col<n){
                 for(int i=0;i<n;i++){
                     sum+= a[row*n+i] * b[i*n + col];
