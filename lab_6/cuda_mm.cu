@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 //CUDA RunTime API
 #include <cuda_runtime.h>
@@ -68,7 +69,7 @@ void matgen(float* a, int n)
     {
         for (j = 0; j < n; j++)
         {
-            a[i * n + j] = (float)rand() / RAND_MAX + (float)rand() / RAND_MAX / RAND_MAX;
+            a[i * n + j] = (float)rand() / RAND_MAX + (float)rand() / (RAND_MAX * RAND_MAX);
         }
     }
 }
@@ -78,26 +79,19 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
 {
     // 4 blocks, each block handle n/2 lines
     int blk_each_dim = __dsqrt_rn((gridDim.x*gridDim.y* gridDim.z));
-    // int blk_each_dim = 1;
-
     int bid = blockIdx.z * (gridDim.x * gridDim.y) + blockIdx.y* gridDim.x + blockIdx.x;
-    // int bid = blockIdx.x;
 
     int bid_y = bid / blk_each_dim; 
     int bid_x = bid % blk_each_dim;
 
     int tid = threadIdx.z * (blockDim.x * blockDim.y) + threadIdx.y * blockDim.x + threadIdx.x;
-    // int tid = threadIdx.x;
 
     int step = n / blk_each_dim;
-    // int step = n;
 
-    int ty = tid / step ;
+    int ty = tid / step;
     int tx = tid % step;
     
-    //  bid_y th blk in row direction, each blk has step row, each row has n elements,
     int row = bid_y * step + ty;
-    // int row = ty;
     //  bid_x th blk in col direction 
     int col = bid_x * step + tx;
     // int col = tx;
@@ -111,10 +105,26 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {   
     int gx=4,gy=1,gz=1;
     int bx=256,by=1,bz=1;
+
+    if(argc < 7){
+        printf("use default griddim (4,1,1), blockdim(256,1,1)\n");
+    }else
+    {
+        gx = atoi(argv[1]);
+        gy = atoi(argv[2]);
+        gz = atoi(argv[3]);
+
+        bx = atoi(argv[4]);
+        by = atoi(argv[5]);
+        bz = atoi(argv[6]);
+
+    }
+
+
 
     if (!InitCUDA()) return 0; 
 
@@ -148,6 +158,7 @@ int main()
     dim3 dimBlock(bx,by,bz);
 
     // Kernel Execution
+    printf("dimGrid (%d %d %d), dimBlock (%d %d %d) \n", gx,gy,gz, bx, by, bz);
     matMultCUDA << < dimGrid, dimBlock >> >(cuda_a , cuda_b , cuda_c , n);
 
     /* Task: CUDA Memory Copy from Device to Host */
@@ -198,6 +209,7 @@ int main()
     printf("Max error: %g Average error: %g\n",max_err, average_err / (n * n));
     if(first_diff>=0)
         printf("max different idx: %d,  c[] is %f, d[] is %f\n", first_diff, c[first_diff], d[first_diff]);
+
 
     // for(int i =32; i< 2* 32;i ++){
     //     printf("%f ", c[i]);
