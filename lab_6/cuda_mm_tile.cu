@@ -7,7 +7,7 @@
 //CUDA RunTime API
 #include <cuda_runtime.h>
 
-#define MATRIX_SIZE 64
+#define MATRIX_SIZE 32
 #define TILE_SIZE 16
 
 void printDeviceProp(const cudaDeviceProp &prop)
@@ -113,37 +113,54 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
      // for each tile of C (each block), there blk_each_dim of A * B
     for(int tile_idx = 0; tile_idx < blk_each_dim; tile_idx ++){
         // for each thread, it copy the element a and b into shared memeory
-        // which element should be copied in a tile
-            ty  = tid / tile_step;
-            tx  = tid % tile_step;
-            // which element c should be updated
-            row = bid_y * tile_step + ty;
-            col = bid_x * tile_step + tx;
+            for( int t_step = 0; t_step< thread_step; t_step ++){ 
+                // in case there is not enough threads for a tile, so each thread so handle thread_step elements
+                temp_tid = tid + t_step * total_thread;
+                if(temp_tid < elements){
+                // which element should be copied in a tile
+                    ty  = temp_tid / tile_step;
+                    tx  = temp_tid % tile_step;
+                    // which element c should be updated
+                    row = bid_y * tile_step + ty;
+                    col = bid_x * tile_step + tx;
 
-            // copy tile_idx th tile of A and B
-           
-            MAT_A_TILE(ty,tx) = MATB(a,bid_y, tile_idx, ty, tx);
-            MAT_B_TILE(ty,tx) = MATB(b,tile_idx, bid_x, ty, tx);
-                
-            if(tile_idx == 0){
-                    MAT(c,row, col) = 0;
+                    // copy tile_idx th tile of A and B
+                    MAT_A_TILE(ty,tx) = MATB(a,bid_y, tile_idx, ty, tx);
+                    MAT_B_TILE(ty,tx) = MATB(b,tile_idx, bid_x, ty, tx);
+                        
+                    if(tile_idx == 0){
+                            MAT(c,row, col) = 0;
+                    }
+                }
+
             }
+         
 
-       
         // wait all threads done the copy process.
         __syncthreads();
 
         // calculate 
-        // if(row < n && col < n){
-            sum = 0;
-            for( int i = 0; i< tile_step; i++){
-                sum +=  MAT_A_TILE(ty,i) * MAT_B_TILE(i,tx);
+        
+            for( int t_step = 0; t_step< thread_step; t_step ++){    
+                temp_tid = tid + t_step * total_thread;
+                if(temp_tid < elements){
+                    ty  = temp_tid / tile_step;
+                    tx  = temp_tid % tile_step;
+                    // which element c should be updated
+                    row = bid_y * tile_step + ty;
+                    col = bid_x * tile_step + tx;
+
+                // if(row < n && col < n){
+                    sum = 0;
+                    for( int i = 0; i< tile_step; i++){
+                        sum +=  MAT_A_TILE(ty,i) * MAT_B_TILE(i,tx);
+                    }
+                    MAT(c,row,col) += sum;
+                // }
+                }
+
             }
-            MAT(c,row,col) += sum;
-        // }
-
-    }
-
+}
 }
 
 int main(int argc, char** argv)
@@ -180,7 +197,7 @@ int main(int argc, char** argv)
     /* Task: Number of Blocks and Threads && Dimention*/
     int block_dim = n/TILE_SIZE + (n%TILE_SIZE>0);
     dim3 dimGrid(block_dim,block_dim,1);
-    dim3 dimBlock(16*16,1,1);
+    dim3 dimBlock(15*15,1,1);
 
     // Kernel Execution
     printf("dimGrid (%d %d %d), dimBlock (%d %d %d) \n", block_dim,block_dim,1, 256, 1, 1);
