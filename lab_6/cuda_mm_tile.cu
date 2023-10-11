@@ -7,7 +7,8 @@
 //CUDA RunTime API
 #include <cuda_runtime.h>
 
-#define MATRIX_SIZE 1024
+#define MATRIX_SIZE 64
+#define TILE_SIZE 16
 
 void printDeviceProp(const cudaDeviceProp &prop)
 {
@@ -73,6 +74,8 @@ void matgen(float* a, int n)
             a[i * n + j] = (float)rand() / RAND_MAX + (float)rand() / RAND_MAX / RAND_MAX;
         }
     }
+    // for(int i = 1; i<= n*n; i++)
+    //     a[i-1] = i;
 }
 
 /* Task 1 & 2: Implement Your Kernel Function Here */
@@ -80,6 +83,7 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
 {
     // n blocks == n tils, each block handle n/2 lines
     int blk_each_dim = __dsqrt_rn((gridDim.x*gridDim.y* gridDim.z));
+
     int bid = blockIdx.z * (gridDim.x * gridDim.y) + blockIdx.y* gridDim.x + blockIdx.x;
 
     int bid_y = bid / blk_each_dim; 
@@ -89,63 +93,63 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
     int tid = threadIdx.z * (blockDim.x * blockDim.y) + threadIdx.y * blockDim.x + threadIdx.x;
 
     // how many rows in a tile;
-    int blk_step = n / blk_each_dim + (n % blk_each_dim>0);
+    int tile_step =TILE_SIZE;
     // how many elements in each tile 
-    int elements = blk_step * blk_step;
+    int elements = tile_step * tile_step;
     // how many elements each thread should calculate.
-    int step = elements/total_thread + (elements%total_thread>0);
+    int thread_step = elements/total_thread + (elements%total_thread>0);
     
     int temp_tid = 0, ty = 0, tx =0, row = 0, col = 0;
     float sum = 0.0;
-    for(int s=0; s<step; s++){
-        temp_tid = tid + s * total_thread;
-        // if(temp_tid < elements){
-            // y in a tile
-            ty = temp_tid / blk_step;
-            // x in a tile
-            tx = temp_tid % blk_step;
 
-            // row in A
-            row = bid_y * blk_step + ty;
-            // col in A
-            col = bid_x * blk_step + tx;
+    __shared__ float a_tile[TILE_SIZE*TILE_SIZE];
+    __shared__ float b_tile[TILE_SIZE*TILE_SIZE];
+   
+    #define MAT(a,y,x) a[(y)*n+(x)]
+    #define MATB(a,by,bx,y,x) a[(y + (by) * TILE_SIZE )*n+(x + (bx) * TILE_SIZE)]
+    #define MAT_A_TILE(y,x) a_tile[(y)* TILE_SIZE + (x)]
+    #define MAT_B_TILE(y,x) b_tile[(y)* TILE_SIZE + (x)]
+    
+     // for each tile of C (each block), there blk_each_dim of A * B
+    for(int tile_idx = 0; tile_idx < blk_each_dim; tile_idx ++){
+        // for each thread, it copy the element a and b into shared memeory
+        // which element should be copied in a tile
+            ty  = tid / tile_step;
+            tx  = tid % tile_step;
+            // which element c should be updated
+            row = bid_y * tile_step + ty;
+            col = bid_x * tile_step + tx;
 
-            sum = 0;
-            // in case n % blk_each_dim !=0
-            if(row<n && col<n){
-                for(int i=0;i<n;i++){
-                    sum+= a[row*n+i] * b[i*n + col];
-                }
-                c[row * n + col] = sum;
+            // copy tile_idx th tile of A and B
+           
+            MAT_A_TILE(ty,tx) = MATB(a,bid_y, tile_idx, ty, tx);
+            MAT_B_TILE(ty,tx) = MATB(b,tile_idx, bid_x, ty, tx);
+                
+            if(tile_idx == 0){
+                    MAT(c,row, col) = 0;
             }
-        // } 
+
+       
+        // wait all threads done the copy process.
+        __syncthreads();
+
+        // calculate 
+        // if(row < n && col < n){
+            sum = 0;
+            for( int i = 0; i< tile_step; i++){
+                sum +=  MAT_A_TILE(ty,i) * MAT_B_TILE(i,tx);
+            }
+            MAT(c,row,col) += sum;
+        // }
+
     }
+
 }
 
 int main(int argc, char** argv)
 {   
     int n = MATRIX_SIZE;
-    int gx=4,gy=1,gz=1;
-    int bx=256,by=1,bz=1;
-
-    if(argc < 8){
-        printf("use default griddim (4,1,1), blockdim(256,1,1)\n");
-    }else
-    {
-        gx = atoi(argv[1]);
-        gy = atoi(argv[2]);
-        gz = atoi(argv[3]);
-
-        bx = atoi(argv[4]);
-        by = atoi(argv[5]);
-        bz = atoi(argv[6]);
-
-        n = atoi(argv[7]);
-
-    }
-
-
-
+  
     if (!InitCUDA()) return 0; 
 
     float *a, *b, *c, *d;
@@ -174,12 +178,13 @@ int main(int argc, char** argv)
     cudaMemcpy(cuda_b,b,sizeof(float)*n*n, cudaMemcpyHostToDevice);
 
     /* Task: Number of Blocks and Threads && Dimention*/
-    dim3 dimGrid(gx,gy,gz);
-    dim3 dimBlock(bx,by,bz);
+    int block_dim = n/TILE_SIZE + (n%TILE_SIZE>0);
+    dim3 dimGrid(block_dim,block_dim,1);
+    dim3 dimBlock(16*16,1,1);
 
     // Kernel Execution
+    printf("dimGrid (%d %d %d), dimBlock (%d %d %d) \n", block_dim,block_dim,1, 256, 1, 1);
 
-    printf("dimGrid (%d %d %d), dimBlock (%d %d %d) \n", gx,gy,gz, bx, by, bz);
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -192,9 +197,11 @@ int main(int argc, char** argv)
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
     printf("GPU time: %f\n", milliseconds);
- 
+
     /* Task: CUDA Memory Copy from Device to Host */
     cudaMemcpy(c,cuda_c, sizeof(float)*n*n, cudaMemcpyDeviceToHost);
+
+
 
     //Free
     cudaFree(cuda_a);
@@ -248,14 +255,17 @@ int main(int argc, char** argv)
     if(first_diff>=0)
         printf("max different idx: %d,  c[] is %f, d[] is %f\n", first_diff, c[first_diff], d[first_diff]);
 
-
-    // for(int i =32; i< 2* 32;i ++){
-    //     printf("%f ", c[i]);
+    // for(int i = 0; i < MATRIX_SIZE;i ++){
+    //     for(int j = 0; j< MATRIX_SIZE; j++)
+    //         printf("%f ", c[i*MATRIX_SIZE + j]);
+    //     printf("\n");
     // }
-    // printf("\n");
+    // printf("\n d:\n");
 
-    // for(int i =32; i< 2* 32;i ++){
-    //     printf("%f ", d[i]);
+    // for(int i = 0; i < MATRIX_SIZE;i ++){
+    //     for(int j = 0; j< MATRIX_SIZE; j++)
+    //         printf("%f ", d[i*MATRIX_SIZE + j]);
+    //     printf("\n");
     // }
     // printf("\n");
     return 0;

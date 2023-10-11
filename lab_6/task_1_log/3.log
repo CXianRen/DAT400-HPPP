@@ -1,6 +1,6 @@
-==PROF== Connected to process 7544 (/chalmers/users/chenhon/DAT400-HPPP/lab_6/build/matmul_v1)
+==PROF== Connected to process 17194 (/chalmers/users/chenhon/DAT400-HPPP/lab_6/build/matmul_v1)
 ==PROF== Profiling "matMultCUDA" - 0: 0%....50%....100% - 9 passes
-==PROF== Disconnected from process 7544
+==PROF== Disconnected from process 17194
 Device Name : NVIDIA GeForce RTX 3070.
 totalGlobalMem : -228917248.
 sharedMemPerBlock : 49152.
@@ -16,23 +16,25 @@ clockRate : 1725000.
 textureAlignment : 512.
 deviceOverlap : 1.
 multiProcessorCount : 46.
-dimGrid (1 1 4), dimBlock (256 1 1) 
-Max error: 2.45476e-07 Average error: 6.25415e-08
-max different idx: 936,  c[] is 7.770004, d[] is 7.770006
-[7544] matmul_v1@127.0.0.1
-  matMultCUDA(const float *, const float *, float *, int), 2023-Oct-10 14:00:28, Context 1, Stream 7
+dimGrid (1 2 2), dimBlock (256 1 1) 
+GPU time: 1.160160
+CPU time: 2533.648926
+Max error: 2.36245e-06 Average error: 3.4047e-07
+max different idx: 212613,  c[] is 258.355225, d[] is 258.355835
+[17194] matmul_v1@127.0.0.1
+  matMultCUDA(const float *, const float *, float *, int), 2023-Oct-10 15:50:11, Context 1, Stream 7
     Section: GPU Speed Of Light Throughput
     ---------------------------------------------------------------------- --------------- ------------------------------
-    DRAM Frequency                                                           cycle/nsecond                           6.52
-    SM Frequency                                                             cycle/nsecond                           1.44
-    Elapsed Cycles                                                                   cycle                          7,095
-    Memory [%]                                                                           %                           1.33
-    DRAM Throughput                                                                      %                           0.40
-    Duration                                                                       usecond                           4.93
-    L1/TEX Cache Throughput                                                              %                          20.38
-    L2 Cache Throughput                                                                  %                           1.03
-    SM Active Cycles                                                                 cycle                         464.30
-    Compute (SM) [%]                                                                     %                           1.57
+    DRAM Frequency                                                           cycle/nsecond                           6.80
+    SM Frequency                                                             cycle/nsecond                           1.50
+    Elapsed Cycles                                                                   cycle                     79,935,236
+    Memory [%]                                                                           %                           5.55
+    DRAM Throughput                                                                      %                           0.68
+    Duration                                                                       msecond                          53.25
+    L1/TEX Cache Throughput                                                              %                          42.14
+    L2 Cache Throughput                                                                  %                           5.55
+    SM Active Cycles                                                                 cycle                   6,937,118.98
+    Compute (SM) [%]                                                                     %                           3.65
     ---------------------------------------------------------------------- --------------- ------------------------------
     WRN   This kernel grid is too small to fill the available resources on this device, resulting in only 0.0 full      
           waves across all SMs. Look at Launch Statistics for more details.                                             
@@ -65,11 +67,11 @@ max different idx: 936,  c[] is 7.770004, d[] is 7.770006
     Block Limit Warps                                                                block                              6
     Theoretical Active Warps per SM                                                   warp                             48
     Theoretical Occupancy                                                                %                            100
-    Achieved Occupancy                                                                   %                          17.12
-    Achieved Active Warps Per SM                                                      warp                           8.22
+    Achieved Occupancy                                                                   %                          16.68
+    Achieved Active Warps Per SM                                                      warp                           8.01
     ---------------------------------------------------------------------- --------------- ------------------------------
     WRN   This kernel's theoretical occupancy is not impacted by any block limit. The difference between calculated     
-          theoretical (100.0%) and measured achieved occupancy (17.1%) can be the result of warp scheduling overheads   
+          theoretical (100.0%) and measured achieved occupancy (16.7%) can be the result of warp scheduling overheads   
           or workload imbalances during the kernel execution. Load imbalances can occur between warps within a block    
           as well as across blocks of the same kernel. See the CUDA Best Practices Guide                                
           (https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#occupancy) for more details on           
