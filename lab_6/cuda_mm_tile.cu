@@ -7,8 +7,8 @@
 //CUDA RunTime API
 #include <cuda_runtime.h>
 
-#define MATRIX_SIZE 32
-#define TILE_SIZE 16
+#define MATRIX_SIZE 1024
+#define TILE_SIZE 32
 
 void printDeviceProp(const cudaDeviceProp &prop)
 {
@@ -123,14 +123,19 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
                     // which element c should be updated
                     row = bid_y * tile_step + ty;
                     col = bid_x * tile_step + tx;
-
-                    // copy tile_idx th tile of A and B
-                    MAT_A_TILE(ty,tx) = MATB(a,bid_y, tile_idx, ty, tx);
-                    MAT_B_TILE(ty,tx) = MATB(b,tile_idx, bid_x, ty, tx);
+                    
+                        // copy tile_idx th tile of A and B
+                        if(tile_idx * tile_step + tx < n){
+                            MAT_A_TILE(ty,tx) = MATB(a,bid_y, tile_idx, ty, tx);
+                        }
+                        if(tile_idx * tile_step + ty < n){
+                            MAT_B_TILE(ty,tx) = MATB(b,tile_idx, bid_x, ty, tx);
+                        }
                         
-                    if(tile_idx == 0){
-                            MAT(c,row, col) = 0;
-                    }
+                        if(tile_idx == 0 && row < n && col < n){
+                                MAT(c,row, col) = 0;
+                        }
+                    
                 }
 
             }
@@ -150,17 +155,20 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
                     row = bid_y * tile_step + ty;
                     col = bid_x * tile_step + tx;
 
-                // if(row < n && col < n){
-                    sum = 0;
-                    for( int i = 0; i< tile_step; i++){
-                        sum +=  MAT_A_TILE(ty,i) * MAT_B_TILE(i,tx);
+                    if(row < n && col < n){
+                        sum = 0;
+                        // if(tile_idx * tile_step + tx <n && tile_idx * tile_step + ty < n){
+                            for( int i = 0; i< tile_step; i++){
+                                    if(tile_idx * tile_step + i <n)
+                                        sum +=  MAT_A_TILE(ty,i) * MAT_B_TILE(i,tx);
+                                }
+                            // }
+                        MAT(c,row,col) += sum;
                     }
-                    MAT(c,row,col) += sum;
-                // }
                 }
 
             }
-}
+    }
 }
 
 int main(int argc, char** argv)
@@ -197,7 +205,7 @@ int main(int argc, char** argv)
     /* Task: Number of Blocks and Threads && Dimention*/
     int block_dim = n/TILE_SIZE + (n%TILE_SIZE>0);
     dim3 dimGrid(block_dim,block_dim,1);
-    dim3 dimBlock(15*15,1,1);
+    dim3 dimBlock(TILE_SIZE*TILE_SIZE,1,1);
 
     // Kernel Execution
     printf("dimGrid (%d %d %d), dimBlock (%d %d %d) \n", block_dim,block_dim,1, 256, 1, 1);
