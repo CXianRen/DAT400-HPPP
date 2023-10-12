@@ -179,7 +179,7 @@ int main(int argc, char** argv)
 
     // Kernel Execution
 
-    printf("dimGrid (%d %d %d), dimBlock (%d %d %d) \n", gx,gy,gz, bx, by, bz);
+    printf("dimGrid (%d %d %d), dimBlock (%d %d %d), n:%d \n", gx,gy,gz, bx, by, bz, n);
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);

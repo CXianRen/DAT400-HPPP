@@ -14,7 +14,14 @@ v2:
 
 
 run_v1:
-	. ./setup.sh; ./${BUILD_PATH}/matmul_v1
+	ncu ./${BUILD_PATH}/matmul_v1 4 1 1 256 1 1  32 > task_1_log/411-256-32.log
+	ncu ./${BUILD_PATH}/matmul_v1 1 4 1 256 1 1  32 > task_1_log/141-256-32.log
+	ncu ./${BUILD_PATH}/matmul_v1 1 1 4 256 1 1  32 > task_1_log/114-256-32.log
+	ncu ./${BUILD_PATH}/matmul_v1 2 2 1 256 1 1  32 > task_1_log/221-256-32.log
+	ncu ./${BUILD_PATH}/matmul_v1 4 1 1 256 1 1  1024 > task_1_log/411-256-1024.log
+	ncu ./${BUILD_PATH}/matmul_v1 1 4 1 256 1 1  1024 > task_1_log/141-256-1024.log
+	ncu ./${BUILD_PATH}/matmul_v1 1 1 4 256 1 1  1024 > task_1_log/114-256-1024.log
+	ncu ./${BUILD_PATH}/matmul_v1 2 2 1 256 1 1  1024 > task_1_log/221-256-1024.log
 
 
 run_v2:

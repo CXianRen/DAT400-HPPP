@@ -1,0 +1,79 @@
+==PROF== Connected to process 19728 (/chalmers/users/chenhon/DAT400-HPPP/lab_6/build/matmul_v1)
+==PROF== Profiling "matMultCUDA" - 0: 0%....50%....100% - 9 passes
+==PROF== Disconnected from process 19728
+Device Name : NVIDIA GeForce RTX 3070.
+totalGlobalMem : -228917248.
+sharedMemPerBlock : 49152.
+regsPerBlock : 65536.
+warpSize : 32.
+memPitch : 2147483647.
+maxThreadsPerBlock : 1024.
+maxThreadsDim[0 - 2] : 1024 1024 64.
+maxGridSize[0 - 2] : 2147483647 65535 65535.
+totalConstMem : 65536.
+major.minor : 8.6.
+clockRate : 1725000.
+textureAlignment : 512.
+deviceOverlap : 1.
+multiProcessorCount : 46.
+dimGrid (4 1 1), dimBlock (256 1 1), n:1024 
+GPU time: 485.037689
+CPU time: 2371.928955
+Max error: 2.36245e-06 Average error: 3.4047e-07
+max different idx: 212613,  c[] is 258.355225, d[] is 258.355835
+[19728] matmul_v1@127.0.0.1
+  matMultCUDA(const float *, const float *, float *, int), 2023-Oct-12 17:14:44, Context 1, Stream 7
+    Section: GPU Speed Of Light Throughput
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.80
+    SM Frequency                                                             cycle/nsecond                           1.50
+    Elapsed Cycles                                                                   cycle                     61,530,378
+    Memory [%]                                                                           %                           7.21
+    DRAM Throughput                                                                      %                           0.86
+    Duration                                                                       msecond                          41.00
+    L1/TEX Cache Throughput                                                              %                          54.53
+    L2 Cache Throughput                                                                  %                           7.21
+    SM Active Cycles                                                                 cycle                   5,361,646.43
+    Compute (SM) [%]                                                                     %                           4.74
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   This kernel grid is too small to fill the available resources on this device, resulting in only 0.0 full      
+          waves across all SMs. Look at Launch Statistics for more details.                                             
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                        256
+    Function Cache Configuration                                                                  cudaFuncCachePreferNone
+    Grid Size                                                                                                           4
+    Registers Per Thread                                                   register/thread                             40
+    Shared Memory Configuration Size                                                 Kbyte                           8.19
+    Driver Shared Memory Per Block                                             Kbyte/block                           1.02
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                          1,024
+    Waves Per SM                                                                                                     0.01
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   The grid for this launch is configured to execute only 4 blocks, which is less than the GPU's 46              
+          multiprocessors. This can underutilize some multiprocessors. If you do not intend to execute this kernel      
+          concurrently with other workloads, consider reducing the block size to have at least one block per            
+          multiprocessor or increase the size of the grid to fully utilize the available hardware resources. See the    
+          Hardware Model (https://docs.nvidia.com/nsight-compute/ProfilingGuide/index.html#metrics-hw-model)            
+          description for more details on launch configurations.                                                        
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                              6
+    Block Limit Shared Mem                                                           block                              8
+    Block Limit Warps                                                                block                              6
+    Theoretical Active Warps per SM                                                   warp                             48
+    Theoretical Occupancy                                                                %                            100
+    Achieved Occupancy                                                                   %                          16.61
+    Achieved Active Warps Per SM                                                      warp                           7.97
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   This kernel's theoretical occupancy is not impacted by any block limit. The difference between calculated     
+          theoretical (100.0%) and measured achieved occupancy (16.6%) can be the result of warp scheduling overheads   
+          or workload imbalances during the kernel execution. Load imbalances can occur between warps within a block    
+          as well as across blocks of the same kernel. See the CUDA Best Practices Guide                                
+          (https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#occupancy) for more details on           
+          optimizing occupancy.                                                                                         
+
