@@ -7,8 +7,8 @@
 //CUDA RunTime API
 #include <cuda_runtime.h>
 
-#define MATRIX_SIZE 1024
-#define TILE_SIZE 32
+#define MATRIX_SIZE 128
+// #define TILE_SIZE 32
 
 void printDeviceProp(const cudaDeviceProp &prop)
 {
@@ -45,7 +45,7 @@ bool InitCUDA()
     {
         cudaDeviceProp prop;
         cudaGetDeviceProperties(&prop, i);
-        printDeviceProp(prop);
+        // printDeviceProp(prop);
         if (cudaGetDeviceProperties(&prop, i) == cudaSuccess) 
         {
             if (prop.major >= 1) 
@@ -83,6 +83,7 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
 {
     // n blocks == n tils, each block handle n/2 lines
     int blk_each_dim = __dsqrt_rn((gridDim.x*gridDim.y* gridDim.z));
+    // int blk_each_dim = gridDim.x;
 
     int bid = blockIdx.z * (gridDim.x * gridDim.y) + blockIdx.y* gridDim.x + blockIdx.x;
 
@@ -90,10 +91,13 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
     int bid_x = bid % blk_each_dim;
 
     int total_thread = blockDim.x * blockDim.y * blockDim.z;
+    // int total_thread = blockDim.x;
+
     int tid = threadIdx.z * (blockDim.x * blockDim.y) + threadIdx.y * blockDim.x + threadIdx.x;
+    // int tid = threadIdx.x;
 
     // how many rows in a tile;
-    int tile_step =TILE_SIZE;
+    int tile_step = TILE_SIZE;
     // how many elements in each tile 
     int elements = tile_step * tile_step;
     // how many elements each thread should calculate.
@@ -116,6 +120,7 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
             for( int t_step = 0; t_step< thread_step; t_step ++){ 
                 // in case there is not enough threads for a tile, so each thread so handle thread_step elements
                 temp_tid = tid + t_step * total_thread;
+                // temp_tid = tid;
                 if(temp_tid < elements){
                 // which element should be copied in a tile
                     ty  = temp_tid / tile_step;
@@ -132,7 +137,7 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
                             MAT_B_TILE(ty,tx) = MATB(b,tile_idx, bid_x, ty, tx);
                         }
                         
-                        if(tile_idx == 0 && row < n && col < n){
+                        if(tile_idx == 0){
                                 MAT(c,row, col) = 0;
                         }
                     
@@ -148,6 +153,7 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
         
             for( int t_step = 0; t_step< thread_step; t_step ++){    
                 temp_tid = tid + t_step * total_thread;
+                // temp_tid = tid;
                 if(temp_tid < elements){
                     ty  = temp_tid / tile_step;
                     tx  = temp_tid % tile_step;
@@ -168,18 +174,20 @@ __global__ static void matMultCUDA(const float* a, const float* b, float* c, int
                 }
 
             }
+        __syncthreads();
     }
 }
 
 int main(int argc, char** argv)
 {   
-    int n = MATRIX_SIZE;
+    // run main like: xxx N
+    int n = atoi(argv[1]);
+    int t = atoi(argv[2]); // thread number of per block
+    // int n = MATRIX_SIZE;
   
     if (!InitCUDA()) return 0; 
 
     float *a, *b, *c, *d;
-
-
 
     a = (float*)malloc(sizeof(float)* n * n); 
     b = (float*)malloc(sizeof(float)* n * n); 
@@ -205,10 +213,10 @@ int main(int argc, char** argv)
     /* Task: Number of Blocks and Threads && Dimention*/
     int block_dim = n/TILE_SIZE + (n%TILE_SIZE>0);
     dim3 dimGrid(block_dim,block_dim,1);
-    dim3 dimBlock(TILE_SIZE*TILE_SIZE,1,1);
+    dim3 dimBlock(t,1,1);
 
     // Kernel Execution
-    printf("dimGrid (%d %d %d), dimBlock (%d %d %d) \n", block_dim,block_dim,1, 256, 1, 1);
+    printf("dimGrid (%d %d %d), dimBlock (%d %d %d), n:%d,  tile size: %d \n", block_dim,block_dim,1, t, 1, 1, n, TILE_SIZE);
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -280,18 +288,10 @@ int main(int argc, char** argv)
     if(first_diff>=0)
         printf("max different idx: %d,  c[] is %f, d[] is %f\n", first_diff, c[first_diff], d[first_diff]);
 
-    // for(int i = 0; i < MATRIX_SIZE;i ++){
-    //     for(int j = 0; j< MATRIX_SIZE; j++)
-    //         printf("%f ", c[i*MATRIX_SIZE + j]);
-    //     printf("\n");
-    // }
-    // printf("\n d:\n");
-
-    // for(int i = 0; i < MATRIX_SIZE;i ++){
-    //     for(int j = 0; j< MATRIX_SIZE; j++)
-    //         printf("%f ", d[i*MATRIX_SIZE + j]);
-    //     printf("\n");
-    // }
-    // printf("\n");
+    if(max_err > 1e-3){
+        printf("Fail\n");
+    }else{
+        printf("Pass\n");
+    }
     return 0;
 }
