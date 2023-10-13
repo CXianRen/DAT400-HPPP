@@ -14,14 +14,19 @@ v2:
 
 
 run_v1:
-	ncu ./${BUILD_PATH}/matmul_v1 4 1 1 256 1 1  32 > task_1_log/411-256-32.log
-	ncu ./${BUILD_PATH}/matmul_v1 1 4 1 256 1 1  32 > task_1_log/141-256-32.log
-	ncu ./${BUILD_PATH}/matmul_v1 1 1 4 256 1 1  32 > task_1_log/114-256-32.log
-	ncu ./${BUILD_PATH}/matmul_v1 2 2 1 256 1 1  32 > task_1_log/221-256-32.log
-	ncu ./${BUILD_PATH}/matmul_v1 4 1 1 256 1 1  1024 > task_1_log/411-256-1024.log
-	ncu ./${BUILD_PATH}/matmul_v1 1 4 1 256 1 1  1024 > task_1_log/141-256-1024.log
-	ncu ./${BUILD_PATH}/matmul_v1 1 1 4 256 1 1  1024 > task_1_log/114-256-1024.log
-	ncu ./${BUILD_PATH}/matmul_v1 2 2 1 256 1 1  1024 > task_1_log/221-256-1024.log
+#   N = 1024, grimd = 4, thread = 256 
+	ncu ./${BUILD_PATH}/matmul_v1 4 1 1 256 1 1 1024 > task_1_log/411-256-1024.log
+#	N = 1024, grimd = 16 thread = 256
+	ncu ./${BUILD_PATH}/matmul_v1 16 1 1 256 1 1 1024 > task_1_log/1611-256-1024.log
+#	N = 1024, grimd = 4,4 thread = 256
+	ncu ./${BUILD_PATH}/matmul_v1 4 4 1 256 1 1 1024 > task_1_log/441-256-1024.log
+#	N = 1024, grimd = 4,4 thread = 512
+	ncu ./${BUILD_PATH}/matmul_v1 4 4 1 512 1 1 1024 > task_1_log/441-512-1024.log
+#	N = 1024, grimd = 4,4 thread = 256,2 
+	ncu ./${BUILD_PATH}/matmul_v1 4 4 1 256 2 1 1024 > task_1_log/441-2562-1024.log
+#	N = 1024, grimd = 4,4 thread = 16 32 
+	ncu ./${BUILD_PATH}/matmul_v1 4 4 1 16 16 2 1024 > task_1_log/441-16162-1024.log
+
 
 
 run_v2:

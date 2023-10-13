@@ -1,6 +1,6 @@
-==PROF== Connected to process 19930 (/chalmers/users/chenhon/DAT400-HPPP/lab_6/build/matmul_v1)
+==PROF== Connected to process 30579 (/chalmers/users/chenhon/DAT400-HPPP/lab_6/build/matmul_v1)
 ==PROF== Profiling "matMultCUDA" - 0: 0%....50%....100% - 9 passes
-==PROF== Disconnected from process 19930
+==PROF== Disconnected from process 30579
 Device Name : NVIDIA GeForce RTX 3070.
 totalGlobalMem : -228917248.
 sharedMemPerBlock : 49152.
@@ -16,43 +16,43 @@ clockRate : 1725000.
 textureAlignment : 512.
 deviceOverlap : 1.
 multiProcessorCount : 46.
-dimGrid (1 1 4), dimBlock (256 1 1), n:1024 
-GPU time: 489.161560
-CPU time: 2463.465088
+dimGrid (4 4 1), dimBlock (256 1 1), n:1024 
+GPU time: 217.411133
+CPU time: 2341.798096
 Max error: 2.36245e-06 Average error: 3.4047e-07
 max different idx: 212613,  c[] is 258.355225, d[] is 258.355835
-[19930] matmul_v1@127.0.0.1
-  matMultCUDA(const float *, const float *, float *, int), 2023-Oct-12 17:14:50, Context 1, Stream 7
+[30579] matmul_v1@127.0.0.1
+  matMultCUDA(const float *, const float *, float *, int), 2023-Oct-13 09:10:58, Context 1, Stream 7
     Section: GPU Speed Of Light Throughput
     ---------------------------------------------------------------------- --------------- ------------------------------
     DRAM Frequency                                                           cycle/nsecond                           6.80
     SM Frequency                                                             cycle/nsecond                           1.50
-    Elapsed Cycles                                                                   cycle                     61,488,596
-    Memory [%]                                                                           %                           7.21
-    DRAM Throughput                                                                      %                           0.86
-    Duration                                                                       msecond                          40.98
-    L1/TEX Cache Throughput                                                              %                          54.69
-    L2 Cache Throughput                                                                  %                           7.21
-    SM Active Cycles                                                                 cycle                   5,345,975.30
-    Compute (SM) [%]                                                                     %                           4.75
+    Elapsed Cycles                                                                   cycle                     17,222,866
+    Memory [%]                                                                           %                          26.05
+    DRAM Throughput                                                                      %                           2.00
+    Duration                                                                       msecond                          11.48
+    L1/TEX Cache Throughput                                                              %                          49.42
+    L2 Cache Throughput                                                                  %                          26.05
+    SM Active Cycles                                                                 cycle                   5,926,721.24
+    Compute (SM) [%]                                                                     %                          16.95
     ---------------------------------------------------------------------- --------------- ------------------------------
-    WRN   This kernel grid is too small to fill the available resources on this device, resulting in only 0.0 full      
+    WRN   This kernel grid is too small to fill the available resources on this device, resulting in only 0.1 full      
           waves across all SMs. Look at Launch Statistics for more details.                                             
 
     Section: Launch Statistics
     ---------------------------------------------------------------------- --------------- ------------------------------
     Block Size                                                                                                        256
     Function Cache Configuration                                                                  cudaFuncCachePreferNone
-    Grid Size                                                                                                           4
+    Grid Size                                                                                                          16
     Registers Per Thread                                                   register/thread                             40
     Shared Memory Configuration Size                                                 Kbyte                           8.19
     Driver Shared Memory Per Block                                             Kbyte/block                           1.02
     Dynamic Shared Memory Per Block                                             byte/block                              0
     Static Shared Memory Per Block                                              byte/block                              0
-    Threads                                                                         thread                          1,024
-    Waves Per SM                                                                                                     0.01
+    Threads                                                                         thread                          4,096
+    Waves Per SM                                                                                                     0.06
     ---------------------------------------------------------------------- --------------- ------------------------------
-    WRN   The grid for this launch is configured to execute only 4 blocks, which is less than the GPU's 46              
+    WRN   The grid for this launch is configured to execute only 16 blocks, which is less than the GPU's 46             
           multiprocessors. This can underutilize some multiprocessors. If you do not intend to execute this kernel      
           concurrently with other workloads, consider reducing the block size to have at least one block per            
           multiprocessor or increase the size of the grid to fully utilize the available hardware resources. See the    

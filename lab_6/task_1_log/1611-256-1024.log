@@ -1,6 +1,6 @@
-==PROF== Connected to process 19636 (/chalmers/users/chenhon/DAT400-HPPP/lab_6/build/matmul_v1)
+==PROF== Connected to process 30411 (/chalmers/users/chenhon/DAT400-HPPP/lab_6/build/matmul_v1)
 ==PROF== Profiling "matMultCUDA" - 0: 0%....50%....100% - 9 passes
-==PROF== Disconnected from process 19636
+==PROF== Disconnected from process 30411
 Device Name : NVIDIA GeForce RTX 3070.
 totalGlobalMem : -228917248.
 sharedMemPerBlock : 49152.
@@ -16,43 +16,43 @@ clockRate : 1725000.
 textureAlignment : 512.
 deviceOverlap : 1.
 multiProcessorCount : 46.
-dimGrid (4 1 1), dimBlock (256 1 1), n:32 
-GPU time: 476.349274
-CPU time: 0.061000
-Max error: 2.45476e-07 Average error: 6.25415e-08
-max different idx: 936,  c[] is 7.770004, d[] is 7.770006
-[19636] matmul_v1@127.0.0.1
-  matMultCUDA(const float *, const float *, float *, int), 2023-Oct-12 17:14:42, Context 1, Stream 7
+dimGrid (16 1 1), dimBlock (256 1 1), n:1024 
+GPU time: 220.472031
+CPU time: 2315.666992
+Max error: 2.36245e-06 Average error: 3.4047e-07
+max different idx: 212613,  c[] is 258.355225, d[] is 258.355835
+[30411] matmul_v1@127.0.0.1
+  matMultCUDA(const float *, const float *, float *, int), 2023-Oct-13 09:10:55, Context 1, Stream 7
     Section: GPU Speed Of Light Throughput
     ---------------------------------------------------------------------- --------------- ------------------------------
-    DRAM Frequency                                                           cycle/nsecond                           6.42
-    SM Frequency                                                             cycle/nsecond                           1.42
-    Elapsed Cycles                                                                   cycle                          7,359
-    Memory [%]                                                                           %                           1.33
-    DRAM Throughput                                                                      %                           0.39
-    Duration                                                                       usecond                           5.18
-    L1/TEX Cache Throughput                                                              %                          19.30
-    L2 Cache Throughput                                                                  %                           1.33
-    SM Active Cycles                                                                 cycle                         490.11
-    Compute (SM) [%]                                                                     %                           1.51
+    DRAM Frequency                                                           cycle/nsecond                           6.78
+    SM Frequency                                                             cycle/nsecond                           1.50
+    Elapsed Cycles                                                                   cycle                     17,218,117
+    Memory [%]                                                                           %                          26.05
+    DRAM Throughput                                                                      %                           1.94
+    Duration                                                                       msecond                          11.50
+    L1/TEX Cache Throughput                                                              %                          49.35
+    L2 Cache Throughput                                                                  %                          26.05
+    SM Active Cycles                                                                 cycle                   5,935,285.67
+    Compute (SM) [%]                                                                     %                          16.96
     ---------------------------------------------------------------------- --------------- ------------------------------
-    WRN   This kernel grid is too small to fill the available resources on this device, resulting in only 0.0 full      
+    WRN   This kernel grid is too small to fill the available resources on this device, resulting in only 0.1 full      
           waves across all SMs. Look at Launch Statistics for more details.                                             
 
     Section: Launch Statistics
     ---------------------------------------------------------------------- --------------- ------------------------------
     Block Size                                                                                                        256
     Function Cache Configuration                                                                  cudaFuncCachePreferNone
-    Grid Size                                                                                                           4
+    Grid Size                                                                                                          16
     Registers Per Thread                                                   register/thread                             40
     Shared Memory Configuration Size                                                 Kbyte                           8.19
     Driver Shared Memory Per Block                                             Kbyte/block                           1.02
     Dynamic Shared Memory Per Block                                             byte/block                              0
     Static Shared Memory Per Block                                              byte/block                              0
-    Threads                                                                         thread                          1,024
-    Waves Per SM                                                                                                     0.01
+    Threads                                                                         thread                          4,096
+    Waves Per SM                                                                                                     0.06
     ---------------------------------------------------------------------- --------------- ------------------------------
-    WRN   The grid for this launch is configured to execute only 4 blocks, which is less than the GPU's 46              
+    WRN   The grid for this launch is configured to execute only 16 blocks, which is less than the GPU's 46             
           multiprocessors. This can underutilize some multiprocessors. If you do not intend to execute this kernel      
           concurrently with other workloads, consider reducing the block size to have at least one block per            
           multiprocessor or increase the size of the grid to fully utilize the available hardware resources. See the    
@@ -67,8 +67,8 @@ max different idx: 936,  c[] is 7.770004, d[] is 7.770006
     Block Limit Warps                                                                block                              6
     Theoretical Active Warps per SM                                                   warp                             48
     Theoretical Occupancy                                                                %                            100
-    Achieved Occupancy                                                                   %                          16.69
-    Achieved Active Warps Per SM                                                      warp                           8.01
+    Achieved Occupancy                                                                   %                          16.67
+    Achieved Active Warps Per SM                                                      warp                           8.00
     ---------------------------------------------------------------------- --------------- ------------------------------
     WRN   This kernel's theoretical occupancy is not impacted by any block limit. The difference between calculated     
           theoretical (100.0%) and measured achieved occupancy (16.7%) can be the result of warp scheduling overheads   
